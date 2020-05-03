@@ -1,12 +1,15 @@
 import logging
-import re
 import os
-import yaml
+import re
 import sys
-from typing import List, Any
-from errors import ConfigError
+from typing import Any, List
+
+import yaml
+
+from matrix_reminder_bot.errors import ConfigError
 
 logger = logging.getLogger()
+logging.getLogger("peewee").setLevel(logging.INFO)  # Prevent debug messages from peewee lib
 
 
 class Config(object):
@@ -42,15 +45,33 @@ class Config(object):
             logger.addHandler(handler)
 
         # Storage setup
-        self.database_filepath = self._get_cfg(["storage", "database_filepath"], required=True)
-        self.store_filepath = self._get_cfg(["storage", "store_filepath"], required=True)
+        database_path = self._get_cfg(["storage", "database"], required=True)
+
+        # We support both SQLite and Postgres backends
+        # Determine which one the user intends
+        sqlite_scheme = "sqlite://"
+        postgres_scheme = "postgres://"
+        if database_path.startswith(sqlite_scheme):
+            self.database = {
+                "type": "sqlite",
+                "connection_string": database_path[len(sqlite_scheme):]
+            }
+        elif database_path.startswith(postgres_scheme):
+            self.database = {
+                "type": "postgres",
+                "connection_string": database_path
+            }
+        else:
+            raise ConfigError("Invalid connection string for storage.database")
+
+        self.store_path = self._get_cfg(["storage", "store_path"], default="store")
 
         # Create the store folder if it doesn't exist
-        if not os.path.isdir(self.store_filepath):
-            if not os.path.exists(self.store_filepath):
-                os.mkdir(self.store_filepath)
+        if not os.path.isdir(self.store_path):
+            if not os.path.exists(self.store_path):
+                os.mkdir(self.store_path)
             else:
-                raise ConfigError(f"storage.store_filepath '{self.store_filepath}' is not a directory")
+                raise ConfigError(f"storage.store_path '{self.store_path}' is not a directory")
 
         # Matrix bot account setup
         self.user_id = self._get_cfg(["matrix", "user_id"], required=True)
@@ -61,9 +82,8 @@ class Config(object):
         self.device_id = self._get_cfg(["matrix", "device_id"], required=True)
         self.device_name = self._get_cfg(["matrix", "device_name"], default="nio-template")
         self.homeserver_url = self._get_cfg(["matrix", "homeserver_url"], required=True)
-        self.enable_encryption = self._get_cfg(["matrix", "enable_encryption"], default=False)
 
-        self.command_prefix = self._get_cfg(["command_prefix"], default="!c") + " "
+        self.command_prefix = self._get_cfg(["command_prefix"], default="!c")
 
     def _get_cfg(
             self,

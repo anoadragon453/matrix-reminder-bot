@@ -1,8 +1,7 @@
 import logging
-from nio import (
-    SendRetryError
-)
+
 from markdown import markdown
+from nio import SendRetryError
 
 logger = logging.getLogger(__name__)
 
@@ -50,4 +49,3 @@ async def send_text_to_room(
         )
     except SendRetryError:
         logger.exception(f"Unable to send message response to {room_id}")
-

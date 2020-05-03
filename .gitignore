@@ -2,6 +2,7 @@
 .idea/
 
 # Python virtualenv environment folders
+venv/
 env/
 env3/
 .env/
@@ -15,8 +16,14 @@ config.yaml
 # Python
 __pycache__/
 
-# Config file
-config.yaml
-
 # Log files
 *.log
+
+# Default docker volume location
+data/
+
+# Default bot store directory
+store/
+
+# Python egg directories
+*.egg-info/

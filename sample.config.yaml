@@ -2,8 +2,8 @@
 # Below you will find various config sections and options
 # Default values are shown
 
-# The string to prefix messages with to talk to the bot in group chats
-command_prefix: "!c"
+# The string to prefix bot commands with
+command_prefix: "!"
 
 # Options for connecting to the bot's Matrix account
 matrix:
@@ -11,25 +11,26 @@ matrix:
   user_id: "@bot:example.com"
   # Matrix account password
   user_password: ""
-  # The URL of the homeserver to connect to
+  # The public URL at which the homeserver's Client-Server API can be accessed
   homeserver_url: https://example.com
   # The device ID that is **non pre-existing** device
-  # If this device ID already exists, messages will be dropped silently in encrypted rooms
-  device_id: ABCDEFGHIJ
+  # If this device ID already exists, messages will be dropped silently in
+  # encrypted rooms
+  device_id: REMINDER
   # What to name the logged in device
-  device_name: nio-template
-  # End-to-end encryption support
-  #
-  # Enabling this requires installing the matrix-nio encryption dependencies
-  # as described here: https://github.com/poljar/matrix-nio#installation
-  enable_encryption: true
+  device_name: Reminder Bot
 
 storage:
-  # The path to the database
-  database_filepath: "bot.db"
+  # The database connection string
+  # For SQLite3, this would look like:
+  #     database: "sqlite://bot.db"
+  # For Postgres, this would look like:
+  #     database: "postgres://username:password@localhost/dbname?sslmode=disable"
+  #database: "postgres://matrix-reminder-bot:remindme@localhost/matrix-reminder-bot?sslmode=disable"
+  database: "sqlite://bot.db"
   # The path to a directory for internal bot storage
   # containing encryption keys, sync tokens, etc.
-  store_filepath: "./store"
+  store_path: "./store"
 
 # Logging setup
 logging:
@@ -42,7 +43,7 @@ logging:
     enabled: false
     # The path to the file to log to. May be relative or absolute
     filepath: bot.log
-  # Configure logging to the console output
+  # Configure logging to the console (stdout/stderr)
   console_logging:
-    # Whether logging to the console is enabled
+    # Whether console logging is enabled
     enabled: true

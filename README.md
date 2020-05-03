@@ -1,115 +1,218 @@
-# Nio Template
+# Matrix Reminder Bot
 
-A template for creating bots with
-[matrix-nio](https://github.com/poljar/matrix-nio). The documentation for
-matrix-nio can be found
-[here](https://matrix-nio.readthedocs.io/en/latest/nio.html).
+A short bot written with [nio-template](https://github.com/anoadragon453/nio-template).
 
-## Projects using nio-template
+## Features
 
-* [anoadragon453/msc-chatbot](https://github.com/anoadragon453/msc-chatbot) - A matrix bot for matrix spec proposals
-* [anoadragon453/matrix-episode-bot](https://github.com/anoadragon453/matrix-episode-bot) - A matrix bot to post episode links
-* [TheForcer/vision-nio](https://github.com/TheForcer/vision-nio) - A general purpose matrix chatbot
+* Set reminders
+* Have the bot remind you or the whole room
+* Reminders persist between bot restarts
+* Alarms - persistent notifications for a reminder until silenced
+* Supports end-to-end encrypted rooms
 
-Want your project listed here? [Edit this
-doc!](https://github.com/anoadragon453/nio-template/edit/master/README.md)
+## Install
 
-## Project structure
+matrix-reminder-bot requires
+[matrix-nio](https://github.com/matrix-org/matrix-nio), which supports
+participation in end-to-end encryption rooms! To do so, it makes use of the
+[libolm](https://gitlab.matrix.org/matrix-org/olm) C library.  This library
+must be installed to allow for end-to-end encryption functionality, and
+unfortunately it is *also* required for functional message polling, so it is
+practically a hard required for this program.
 
-### `main.py`
+Unfortunately, installation of this library can be non-trivial on some
+platforms. However, with the power of docker dependencies can be handled with
+little fuss, and it is thus the recommended method of installing
+`matrix-reminder-bot`. Native installation instructions are also provided, but
+be aware that they are more complex.
 
-Initialises the config file, the bot store, and nio's AsyncClient (which is
-used to retrieve and send events to a matrix homeserver). It also registering
-some callbacks on the AsyncClient to tell it to call some functions when
-certain events are received (such as an invite to a room, or a new message in a
-room the bot is in).
+### Docker
 
-It also starts the sync loop. Matrix clients "sync" with a homeserver, by
-asking constantly asking for new events. Each time they do, the client gets a
-sync token (stored in the `next_batch` field of the sync response). If the
-client provides this token the next time it syncs (using the `since` parameter
-on the `AsyncClient.sync` method), the homeserver will only return new event
-*since* those specified by the given token.
+Follow the docker [installation instructions](docker/README.md#setup).
 
-This token is saved and provided again automatically by using the
-`client.sync_forever(...)` method.
+### Native installation
 
-### `config.py`
+#### Install native dependencies
 
-This file reads a config file at a given path (hardcoded as `config.yaml` in
-`main.py`), processes everything in it and makes the values available to the
-rest of the bot's code so it knows what to do. Most of the options in the given
-config file have default values, so things will continue to work even if an
-option is left out of the config file. Obviously there are some config values
-that are required though, like the homeserver URL, username, access token etc.
-Otherwise the bot can't function.
+**libolm**
 
-### `storage.py`
+You can install [libolm](https://gitlab.matrix.org/matrix-org/olm) from source,
+or alternatively, check your system's package manager. Note that version
+`3.0.0` or greater is required.
 
-Creates (if necessary) and connects to a SQLite3 database and provides commands
-to put or retrieve data from it. Table definitions should be specified in
-`_initial_setup`, and any necessary migrations should be put in
-`_run_migrations`. There's currently no defined method for how migrations
-should work though.
+**(Optional) postgres development headers**
 
-### `callbacks.py`
+If you want to use postgres as a database backend (see the Configuration
+section for more details), you'll need to install postgres development
+headers:
 
-Holds callback methods which get run when the bot get a certain type of event
-from the homserver during sync. The type and name of the method to be called
-are specified in `main.py`. Currently there are two defined methods, one that
-gets called when a message is sent in a room the bot is in, and another that
-runs when the bot receives an invite to the room.
+Debian/Ubuntu:
 
-The message callback function, `message`, checks if the message was for the
-bot, and whether it was a command. If both of those are true, the bot will
-process that command.
+```
+sudo apt install libpq-dev libpq5
+```
 
-The invite callback function, `invite`, processes the invite event and attempts
-to join the room. This way, the bot will auto-join any room it is invited to.
+Arch:
 
-### `bot_commands.py`
+```
+sudo pacman -S postgresql-libs
+```
 
-Where all the bot's commands are defined. New commands should be defined in
-`process` with an associated private method. `echo` and `help` commands are
-provided by default.
+#### Install Python dependencies
 
-A `Command` object is created when a message comes in that's recognised as a
-command from a user directed at the bot (either through the specified command
-prefix (defined by the bot's config file), or through a private message
-directly to the bot. The `process` command is then called for the bot to act on
-that command.
+Create and activate a Python 3 virtual environment:
 
-### `message_responses.py`
+```
+virtualenv -p python3 env
+source env/bin/activate
+```
 
-Where responses to messages that are posted in a room (but not necessarily
-directed at the bot) are specified. `callbacks.py` will listen for messages in
-rooms the bot is in, and upon receiving one will create a new `Message` object
-(which contains the message text, amongst other things) and calls `process()`
-on it, which can send a message to the room as it sees fit.
+Install python dependencies:
 
-A good example of this would be a Github bot that listens for people mentioning
-issue numbers in chat (e.g. "We should fix #123"), and the bot sending messages
-to the room immediately afterwards with the issue name and link.
+```
+pip install matrix-reminder-bot
+```
 
-### `chat_functions.py`
+If you want to use postgres as a database backend (see the Configuration
+section for more details), use the following command to install postgres
+dependencies alongside those that are necessary:
 
-A separate file to hold helper methods related to messaging. Mostly just for
-organisational purposes. Currently just holds `send_text_to_room`, a helper
-method for sending formatted messages to a room.
+```
+pip install "matrix-reminder-bot[postgres]"
+```
 
-### `errors.py`
+## Configuration
 
-Custom error types for the bot. Currently there's only one special type that's
-defined for when a error is found while the config file is being processed.
+Copy the sample configuration file to a new `config.yaml` file.
 
-### `sample.config.yaml`
+```
+cp sample.config.yaml config.yaml
+```
 
-The sample configuration file. People running your bot should be advised to
-copy this file to `config.yaml`, then edit it according to their needs. Be sure
-never to check the edited `config.yaml` into source control since it'll likely
-contain sensitive details like passwords!
+Edit the config file. The `matrix` section must be modified at least.
 
-## Questions?
+#### (Optional) Set up a Postgres database
 
-Any questions? Ask in
-[#nio-template:amorgan.xyz](https://matrix.to/#/!vmWBOsOkoOtVHMzZgN:amorgan.xyz?via=amorgan.xyz)!
+By default, matrix-reminder-bot uses SQLite as its storage backend. This is
+fine for a few hundred users, but if you plan to support a much higher volume
+of requests, you may consider using Postgres as a database backend instead.
+
+Create a postgres user and database for matrix-reminder-bot:
+
+```
+sudo -u postgresql psql createuser matrix-reminder-bot -W  # prompts for a password
+sudo -u postgresql psql createdb -O matrix-reminder-bot matrix-reminder-bot
+```
+
+Edit the `storage.database` config option, replacing the `sqlite://...` string with `postgres://...`. The syntax is:
+
+```
+
+## Running
+
+### Docker
+
+Refer to the docker [run instructions](docker/README.md#running).
+
+### Native installation
+
+Make sure to source your python environment if you haven't already:
+
+```
+source env/bin/activate
+```
+
+Then simply run the bot with:
+
+```
+matrix-reminder-bot
+```
+
+By default, the bot will run with the config file at `./config.yaml`. However, an
+alternative relative or absolute filepath can be specified after the command:
+
+```
+matrix-reminder-bot other-config.yaml
+```
+
+## Usage
+
+Invite the bot to a room and it should accept the invite and join.
+
+### Setting a reminder
+
+Have the bot ping you in the room about something:
+
+```
+!remindme <time>, <reminder text>
+```
+
+* `<time>` is an amount of time expressed in the following form:
+  `5m` for 5 minutes, `3h` for 3 hours, `10d` for 10 days. These
+  cannot be combined together.
+* `<reminder text>` is the text that the bot will remind you with.
+
+Have the bot ping you and everyone else in the room about something
+(assuming the bot has permissions to do so):
+
+```
+!remindroom <time>, <reminder text>
+```
+
+### Recurring reminders
+
+To create a recurring reminder, put `every` followed by a length of
+time, then the time that the reminder should first go off, and then
+the reminder text:
+
+```
+!remindme every 1w, tuesday, take out the trash
+```
+
+```
+!remindroom every 5m, 1m, you are loved
+```
+
+### List upcoming reminders
+
+```
+!listreminders
+```
+
+This will output a list of reminders and when they will fire next:
+
+```
+sometime Do the dishes (every 1d)
+sometime Take out the trash
+sometime Send email to Grandma
+```
+
+### Cancel a reminder
+
+```
+!cancelreminder <reminder text>
+```
+
+### Setting an alarm
+
+Alarms are the same as a reminder, but they will repeat every 5 minutes
+after firing until they are silenced.
+
+Creating an alarm is the same syntax as creating a reminder, besides a
+different command:
+
+```
+!alarmme <time>, <reminder text>
+```
+
+```
+!alarmroom every <recurring time>, <start time>, <reminder text>
+```
+
+### Silencing an alarm
+
+An alarm can be silenced with the following command:
+
+```
+!silence <reminder text>
+```
