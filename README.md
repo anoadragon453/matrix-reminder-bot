@@ -107,6 +107,10 @@ sudo -u postgresql psql createdb -O matrix-reminder-bot matrix-reminder-bot
 Edit the `storage.database` config option, replacing the `sqlite://...` string with `postgres://...`. The syntax is:
 
 ```
+database: "postgres://username:password@localhost/dbname?sslmode=disable"
+```
+
+See also the comments in `sample.config.yaml`.
 
 ## Running
 
