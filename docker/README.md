@@ -55,6 +55,14 @@ docker run -d --name matrix-reminder-bot \
     anoadragon453/matrix-reminder-bot:latest
 ```
 
+If you are using Postgres, use the `postgres` tag instead:
+
+```
+docker run -d --name matrix-reminder-bot \
+    -v /path/to/data-directory:/data \
+    anoadragon453/matrix-reminder-bot:postgres
+```
+
 You can then check that it started correctly with:
 
 ```
