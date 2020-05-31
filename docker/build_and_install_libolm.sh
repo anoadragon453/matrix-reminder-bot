@@ -8,6 +8,10 @@
 #
 #    ./build_and_install_libolm.sh 3.1.4 /python-bindings
 #
+# Note that if a python bindings installation directory is not supplied, bindings will
+# be installed to the default directory.
+#
+
 set -ex
 
 # Download the specified version of libolm
