@@ -24,9 +24,11 @@ long_description = read_file(("README.md",))
 
 
 setup(
-    name="matrix_reminder_bot",
+    name="matrix-reminder-bot",
     version=version,
+    url="https://github.com/anoadragon453/matrix-reminder-bot",
     description="A matrix bot to remind you about things!",
+    packages=find_packages(exclude=["tests", "tests.*"]),
     install_requires=[
         "matrix-nio[e2e]>=0.10.0",
         "Markdown>=3.1.1",
@@ -44,6 +46,7 @@ setup(
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
     ],
     long_description=long_description,
     # Allow the user to run the bot with `matrix-reminder-bot ...`

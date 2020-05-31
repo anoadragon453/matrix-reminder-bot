@@ -1,6 +1,6 @@
 # Docker
 
-The docker image will run matrix-reminder-bot with an SQLite3 database and
+The docker image will run matrix-reminder-bot with a SQLite database and
 end-to-end encryption dependencies included. For larger deployments, a
 connection to a Postgres database backend is recommended.
 
@@ -52,15 +52,7 @@ matrix-reminder-bot with:
 ```
 docker run -d --name matrix-reminder-bot \
     -v /path/to/data-directory:/data \
-    anoadragon453/matrix-reminder-bot:latest
-```
-
-If you are using Postgres, use the `postgres` tag instead:
-
-```
-docker run -d --name matrix-reminder-bot \
-    -v /path/to/data-directory:/data \
-    anoadragon453/matrix-reminder-bot:postgres
+    anoa/matrix-reminder-bot:latest
 ```
 
 You can then check that it started correctly with:
@@ -75,5 +67,5 @@ To build the image from source, use the following `docker build` command from
 the repo's root:
 
 ```
-docker build -t anoadragon453/matrix-reminder-bot -f docker/Dockerfile .
+docker build -t anoa/matrix-reminder-bot:latest -f docker/Dockerfile .
 ```

@@ -1,4 +1,6 @@
+#!/usr/bin/env python3
+import asyncio
 from matrix_reminder_bot import main
 
 # Run the main function of the bot
-main.main()
+asyncio.get_event_loop().run_until_complete(main.main())

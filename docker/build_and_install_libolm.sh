@@ -2,16 +2,16 @@
 #
 # Call with the following arguments:
 #
-#    ./build_and_install_libolm.sh <libolm version> <folder to install to>
+#    ./build_and_install_libolm.sh <libolm version> <python bindings install dir>
 #
 # Example:
 #
-#    ./build_and_install_libolm.sh 3.1.4 /olm
+#    ./build_and_install_libolm.sh 3.1.4 /python-bindings
 #
 set -ex
 
 # Download the specified version of libolm
-git clone -b "$1" https://gitlab.matrix.org/matrix-org/olm.git "$2" && cd "$2"
+git clone -b "$1" https://gitlab.matrix.org/matrix-org/olm.git olm && cd olm
 
 # Build libolm
 cmake . -Bbuild
@@ -24,4 +24,5 @@ make install
 cd python && make olm-python3
 
 # Install python3 bindings
-make install-python3
+mkdir -p "$2"
+DESTDIR="$2" make install-python3
