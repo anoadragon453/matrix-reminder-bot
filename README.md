@@ -1,5 +1,7 @@
 # Matrix Reminder Bot
 
+![example of interacting with the bot](screenshot.png)
+
 A short bot written with [nio-template](https://github.com/anoadragon453/nio-template).
 
 ## Features
