@@ -32,9 +32,7 @@ Follow the docker [installation instructions](docker/README.md#setup).
 
 ### Native installation
 
-#### Install native dependencies
-
-**libolm**
+#### Install libolm
 
 You can install [libolm](https://gitlab.matrix.org/matrix-org/olm) from source,
 or alternatively, check your system's package manager. Note that version
