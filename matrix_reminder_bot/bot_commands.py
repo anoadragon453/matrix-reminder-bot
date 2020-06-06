@@ -444,7 +444,7 @@ cron-tab syntax:
 !remindme cron <min> <hour> <day of month> <month> <day of week>, <reminder text>
 ```
 
-This syntax is supported by any `!remind...` or `!alarm...` command above
+This syntax is supported by any `!remind...` or `!alarm...` command above.
 """
         else:
             text = "Unknown help topic!"
