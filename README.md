@@ -177,6 +177,28 @@ the reminder text:
 !remindroom every 5m, 1m, you are loved
 ```
 
+### Cron-style reminders
+
+If you need more complicated functionality for your reminder's
+timing, you can make use of cron tabs. You can read a guide on
+cron tabs [here](https://www.adminschoice.com/crontab-quick-reference).
+
+In short they allow you to execute more complicated, recurring
+reminders, such as those that should only fire during weekdays.
+
+```
+!remindme cron * 9 * * mon-fri, time for the daily stand up
+```
+
+The above reminder would fire each weekday at 9:00am.
+
+```
+!remindme cron 0/30 9-18 * * mon,wed,fri, take a short break
+```
+
+The above reminder would fire every 30 minutes after 9:00am,
+until 6:30pm, and only on Monday, Wednesday and Friday.
+
 ### List upcoming reminders
 
 ```

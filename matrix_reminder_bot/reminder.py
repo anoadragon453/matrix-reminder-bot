@@ -4,6 +4,7 @@ from typing import Dict, Optional, Tuple
 
 from apscheduler.job import Job
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.util import timedelta_seconds
@@ -42,9 +43,10 @@ class Reminder(object):
             client: AsyncClient,
             store: "storage.Storage",
             room_id: str,
-            start_time: datetime,
             reminder_text: str,
+            start_time: Optional[datetime] = None,
             recurse_timedelta: Optional[timedelta] = None,
+            cron_tab: Optional[str] = None,
             target_user: Optional[str] = None,
             alarm: bool = False,
     ):
@@ -53,6 +55,7 @@ class Reminder(object):
         self.room_id = room_id
         self.start_time = start_time
         self.reminder_text = reminder_text
+        self.cron_tab = cron_tab
         self.recurse_timedelta = recurse_timedelta
         self.target_user = target_user
         self.alarm = alarm
@@ -60,7 +63,10 @@ class Reminder(object):
         ## Schedule the reminder
 
         # Determine how the reminder is triggered
-        if recurse_timedelta:
+        if cron_tab:
+            # Set up a cron trigger
+            trigger = CronTrigger.from_crontab(cron_tab)
+        elif recurse_timedelta:
             # Use an interval trigger (runs multiple times)
             trigger = IntervalTrigger(
                 # timedelta.seconds does NOT give you the timedelta converted to seconds

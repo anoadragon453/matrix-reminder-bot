@@ -81,8 +81,7 @@ class Storage(object):
         """, (0,))
 
         # Set up the reminders table
-
-        self._execute(f"""
+        self._execute("""
             CREATE TABLE reminder (
                 text TEXT,
                 start_time TEXT NOT NULL,
@@ -111,8 +110,54 @@ class Storage(object):
             current_migration_version: The migration version that the database is
                 currently at
         """
-        # No migrations yet
-        pass
+        if current_migration_version < 1:
+            # Add cron_tab column, prevent start_time from being required
+            #
+            # As SQLite3 is quite limited, we need to create a new table and populate it
+            # with existing data
+            self._execute("ALTER TABLE reminder RENAME TO reminder_temp")
+
+            self._execute("""
+                CREATE TABLE reminder (
+                    text TEXT,
+                    start_time TEXT,
+                    recurse_timedelta_s INTEGER,
+                    cron_tab TEXT,
+                    room_id TEXT NOT NULL,
+                    target_user TEXT,
+                    alarm BOOL NOT NULL
+                )
+           """)
+            self._execute("""
+                INSERT INTO reminder (
+                    text,
+                    start_time,
+                    recurse_timedelta_s,
+                    room_id,
+                    target_user,
+                    alarm
+                )
+                SELECT
+                    text,
+                    start_time,
+                    recurse_timedelta_s,
+                    room_id,
+                    target_user,
+                    alarm
+                FROM reminder_temp;
+           """)
+
+            self._execute("""
+                 DROP INDEX reminder_room_id_text
+           """)
+            self._execute("""
+                CREATE UNIQUE INDEX reminder_room_id_text
+                ON reminder(room_id, text)
+           """)
+
+            self._execute("""
+                DROP TABLE reminder_temp
+           """)
 
     def load_reminders(self, client):
         """Load reminders from the database
@@ -128,6 +173,7 @@ class Storage(object):
                 text,
                 start_time,
                 recurse_timedelta_s,
+                cron_tab,
                 room_id,
                 target_user,
                 alarm
@@ -141,11 +187,12 @@ class Storage(object):
                 client=client,
                 store=self,
                 reminder_text=row[0],
-                start_time=datetime.fromisoformat(row[1]),
+                start_time=datetime.fromisoformat(row[1]) if row[1] else None,
                 recurse_timedelta=timedelta(seconds=row[2]) if row[2] else None,
-                room_id=row[3],
-                target_user=row[4],
-                alarm=row[5],
+                cron_tab=row[3],
+                room_id=row[4],
+                target_user=row[5],
+                alarm=row[6],
             )
 
     def store_reminder(self, reminder: Reminder):
@@ -162,16 +209,18 @@ class Storage(object):
                 text,
                 start_time,
                 recurse_timedelta_s,
+                cron_tab,
                 room_id,
                 target_user,
                 alarm
             ) VALUES (
-                ?, ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?
             )
         """, (
             reminder.reminder_text,
             reminder.start_time,
             delta_seconds,
+            reminder.cron_tab,
             reminder.room_id,
             reminder.target_user,
             reminder.alarm,
