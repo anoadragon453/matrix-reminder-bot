@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
-from setuptools import setup, find_packages
+
+from setuptools import find_packages, setup
 
 
 def exec_file(path_segments):
