@@ -116,7 +116,7 @@ class Reminder(object):
         await send_text_to_room(self.client, self.room_id, message, notice=False)
 
         # If this was a one-time reminder, cancel and remove from the reminders dict
-        if not self.recurse_timedelta:
+        if not self.recurse_timedelta and not self.cron_tab:
             self.cancel()
 
     async def _fire_alarm(self):
