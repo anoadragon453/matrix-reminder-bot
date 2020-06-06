@@ -46,6 +46,27 @@ class Command(object):
         self.args = msg_without_prefix.split()  # Get a list of all items, split by spaces
         self.command = self.args.pop(0)  # Remove the first item and save as the command (ex. `remindme`)
 
+    def _parse_reminder_command_args_for_cron(self) -> Tuple[str, str]:
+        """Processes the list of arguments when a cron tab is present
+
+        Returns:
+            A tuple containing the cron tab and the reminder text.
+        """
+
+        # Retrieve the cron tab and reminder text
+
+        # Remove "cron" from the argument list
+        args = self.args[1:]
+
+        # Combine arguments into a string
+        args_str = " ".join(args)
+        logger.debug("Parsing cron command arguments: %s", args_str)
+
+        # Split into cron tab and reminder text
+        cron_tab, reminder_text = args_str.split(",", maxsplit=1)
+
+        return cron_tab, reminder_text.strip()
+
     def _parse_reminder_command_args(self) -> Tuple[datetime, str, Optional[timedelta]]:
         """Processes the list of arguments and returns parsed reminder information
 
@@ -124,11 +145,20 @@ class Command(object):
         return time
 
     async def _confirm_reminder(self, reminder: Reminder):
-        """Sends a message to the room confirming the reminder is set and when
+        """Sends a message to the room confirming the reminder is set
 
         Args:
             reminder: The Reminder to confirm
         """
+        if reminder.cron_tab:
+            # Special-case cron-style reminders. We currently don't do any special
+            # parsing for them
+            await send_text_to_room(
+                self.client, self.room.room_id, "Ok, I will remind you!"
+            )
+
+            return
+
         # Convert a timedelta to a formatted time (ex. May 25 2020, 01:31)
         human_readable_start_time = reminder.start_time.strftime("%b %d %Y, %H:%M")
 
@@ -158,7 +188,27 @@ class Command(object):
             alarm: Whether this reminder is an alarm. It will fire every 5m after it
                 normally fires until silenced.
         """
-        start_time, reminder_text, recurse_timedelta = self._parse_reminder_command_args()
+        # Check whether the time is in human-readable format ("tomorrow at 5pm") or cron-tab
+        # format ("* * * * 2,3,4 *"). We differentiate by checking if the time string starts
+        # with "cron"
+        cron_tab = None
+        start_time = None
+        recurse_timedelta = None
+        if " ".join(self.args).lower().startswith("cron"):
+            cron_tab, reminder_text = self._parse_reminder_command_args_for_cron()
+
+            logger.debug(
+                "Creating reminder in room %s with cron tab %s: %s",
+                self.room.room_id, cron_tab, reminder_text,
+            )
+        else:
+            start_time, reminder_text, recurse_timedelta = self._parse_reminder_command_args()
+
+            logger.debug(
+                "Creating reminder in room %s with delta %s: %s",
+                self.room.room_id, recurse_timedelta, reminder_text,
+            )
+
         if (self.room.room_id, reminder_text) in REMINDERS:
             await send_text_to_room(
                 self.client,
@@ -167,18 +217,14 @@ class Command(object):
             )
             return
 
-        logger.debug(
-            "Creating reminder in room %s with delta %s: %s",
-            self.room.room_id, recurse_timedelta, reminder_text,
-        )
-
         # Create the reminder
         reminder = Reminder(
             self.client,
             self.store,
             self.room.room_id,
-            start_time,
             reminder_text,
+            start_time=start_time,
+            cron_tab=cron_tab,
             recurse_timedelta=recurse_timedelta,
             target_user=target,
             alarm=alarm,
@@ -280,6 +326,12 @@ class Command(object):
             if reminder.room_id != self.room.room_id:
                 continue
 
+            # If this is a cron-style reminder, just print the cron tab
+            if reminder.cron_tab:
+                line = f"`{reminder.cron_tab}`: {reminder.reminder_text}"
+                reminders.append(line)
+                continue
+
             # Format the start time into something readable
             human_readable_start_time = reminder.start_time.strftime("%b %d %Y, %H:%M")
 
@@ -365,7 +417,7 @@ Cancel a reminder:
 **Alarms**
 
 Create a reminder that will repeatedly sound every 5m after its usual
-fire time. Otherwise, the syntax is the same as a normal reminder:
+fire time. Otherwise, the syntax is the same as a reminder:
 
 ```
 !alarmme [every <recurring time>,] <start time>, <reminder text>
@@ -382,6 +434,17 @@ Once firing, an alarm can be silenced with:
 ```
 !silence <reminder text>
 ```
+
+**Cron-tab Syntax**
+
+If you need more complicated recurring reminders, you can make use of
+cron-tab syntax:
+
+```
+!remindme cron <min> <hour> <day of month> <month> <day of week>, <reminder text>
+```
+
+This syntax is supported by any `!remind...` or `!alarm...` command above
 """
         else:
             text = "Unknown help topic!"

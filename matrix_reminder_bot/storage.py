@@ -85,8 +85,9 @@ class Storage(object):
         self._execute(f"""
             CREATE TABLE reminder (
                 text TEXT,
-                start_time TEXT NOT NULL,
+                start_time TEXT,
                 recurse_timedelta_s INTEGER,
+                cron_tab TEXT,
                 room_id TEXT NOT NULL,
                 target_user TEXT,
                 alarm BOOL NOT NULL
@@ -128,6 +129,7 @@ class Storage(object):
                 text,
                 start_time,
                 recurse_timedelta_s,
+                cron_tab,
                 room_id,
                 target_user,
                 alarm
@@ -141,11 +143,12 @@ class Storage(object):
                 client=client,
                 store=self,
                 reminder_text=row[0],
-                start_time=datetime.fromisoformat(row[1]),
+                start_time=datetime.fromisoformat(row[1]) if row[1] else None,
                 recurse_timedelta=timedelta(seconds=row[2]) if row[2] else None,
-                room_id=row[3],
-                target_user=row[4],
-                alarm=row[5],
+                cron_tab=row[3],
+                room_id=row[4],
+                target_user=row[5],
+                alarm=row[6],
             )
 
     def store_reminder(self, reminder: Reminder):
@@ -162,16 +165,18 @@ class Storage(object):
                 text,
                 start_time,
                 recurse_timedelta_s,
+                cron_tab,
                 room_id,
                 target_user,
                 alarm
             ) VALUES (
-                ?, ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?
             )
         """, (
             reminder.reminder_text,
             reminder.start_time,
             delta_seconds,
+            reminder.cron_tab,
             reminder.room_id,
             reminder.target_user,
             reminder.alarm,
