@@ -6,7 +6,7 @@ from apscheduler.util import timedelta_seconds
 
 from matrix_reminder_bot.reminder import REMINDERS, Reminder
 
-latest_migration_version = 0
+latest_migration_version = 1
 
 logger = logging.getLogger(__name__)
 
