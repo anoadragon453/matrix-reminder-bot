@@ -177,8 +177,8 @@ class Storage(object):
             reminder.alarm,
         ))
 
-    def delete_reminder(self, reminder_text: str):
-        """Delete a reminder via its reminder text"""
+    def delete_reminder(self, room_id: str, reminder_text: str):
+        """Delete a reminder via its reminder text and the room it was sent in"""
         self._execute("""
-            DELETE FROM reminder WHERE text = ?
-        """, (reminder_text,))
+            DELETE FROM reminder WHERE room_id = ? AND text = ?
+        """, (room_id, reminder_text,))

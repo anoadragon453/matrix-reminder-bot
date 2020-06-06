@@ -132,7 +132,7 @@ class Reminder(object):
         ALARMS.pop((self.room_id, self.reminder_text), None)
 
         # Delete the reminder from the database
-        self.store.delete_reminder(self.reminder_text)
+        self.store.delete_reminder(self.room_id, self.reminder_text)
 
         # Delete any ongoing jobs
         if self.job and SCHEDULER.get_job(self.job.id):
