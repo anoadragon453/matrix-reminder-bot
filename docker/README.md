@@ -14,8 +14,10 @@ directory on your filesystem, and mount it as `/data` inside the container:
 
 ```
 mkdir data
-# We'll then mount this when running the container using `docker run`'s `-v` flag
 ```
+
+We'll later mount this directory into the container so that its contents
+persist across container restarts.
 
 ### Creating a config file
 
@@ -46,20 +48,19 @@ store log files in the `/data` directory.
 
 ## Running
 
-Once you have a valid configuration file and data directory, you can start
-matrix-reminder-bot with:
+First, create a volume for the data directory created in the above section:
 
 ```
-docker run -d --name matrix-reminder-bot \
-    -v /path/to/data-directory:/data \
-    anoa/matrix-reminder-bot:latest
+docker volume create \
+  --opt type=none \
+  --opt o=bind \
+  --opt device="/path/to/data/dir" data_volume
 ```
 
-You can then check that it started correctly with:
-
-```
-docker logs matrix-reminder-bot
-```
+Now run `docker-compose up matrix-reminder-bot` to start the bot. This will use
+the `matrix-reminder-bot:latest` tag from Docker Hub. If you would rather run
+the local code instead, use `docker-compose up
+matrix-reminder-bot-local-checkout`.
 
 ## Building the Image
 

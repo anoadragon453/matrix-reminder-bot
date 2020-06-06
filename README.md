@@ -242,3 +242,7 @@ An alarm can be silenced with the following command:
 ```
 !silence <reminder text>
 ```
+
+## Development
+
+Please see [CONTRIBUTING.md](CONTRIBUTING.md).
