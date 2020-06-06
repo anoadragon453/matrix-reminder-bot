@@ -30,7 +30,8 @@ async def main():
     # Configure the database
     store = Storage(config.database)
 
-    # Start the python job scheduler
+    # Configure and start the python job scheduler
+    SCHEDULER.configure({"apscheduler.timezone": config.timezone})
     SCHEDULER.start()
 
     # Configuration options for the AsyncClient

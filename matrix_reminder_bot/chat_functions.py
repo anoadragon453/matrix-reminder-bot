@@ -1,7 +1,8 @@
 import logging
 
-from markdown import markdown
 from nio import SendRetryError
+
+from markdown import markdown
 
 logger = logging.getLogger(__name__)
 

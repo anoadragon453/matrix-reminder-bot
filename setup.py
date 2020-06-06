@@ -37,6 +37,7 @@ setup(
         "dateparser>=0.7.4",
         "readabledelta>=0.0.2",
         "apscheduler>=3.6.3",
+        "pytz>=2020.1",
     ],
     extras_require={
         "postgres": ["psycopg2>=2.8.5"],

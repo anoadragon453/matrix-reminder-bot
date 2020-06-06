@@ -32,6 +32,11 @@ storage:
   # containing encryption keys, sync tokens, etc.
   store_path: "./store"
 
+reminders:
+  # Uncomment to set a default timezone that will be used when creating reminders
+  # If not set, UTC will be used
+  #timezone: "Europe/London"
+
 # Logging setup
 logging:
   # Logging level
