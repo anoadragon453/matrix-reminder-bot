@@ -47,14 +47,8 @@ class Callbacks(object):
         if event.sender == self.client.user:
             return
 
-        logger.debug(
-            f"Bot message received for room {room.display_name} | "
-            f"{room.user_name(event.sender)}: {msg}"
-        )
-
         # Check whether this is a command
         if not msg.startswith(self.command_prefix):
-            logger.debug("Message did not start with %s", self.command_prefix)
             return
 
         logger.debug("Command received: %s", msg)
