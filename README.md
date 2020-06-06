@@ -23,7 +23,7 @@ unfortunately it is *also* required for functional message polling, so it is
 practically a hard required for this program.
 
 Unfortunately, installation of this library can be non-trivial on some
-platforms. However, with the power of docker dependencies can be handled with
+platforms. However, with the power of docker, dependencies can be handled with
 little fuss, and it is thus the recommended method of installing
 `matrix-reminder-bot`. Native installation instructions are also provided, but
 be aware that they are more complex.
