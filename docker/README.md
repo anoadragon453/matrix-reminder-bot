@@ -57,10 +57,9 @@ docker volume create \
   --opt device="/path/to/data/dir" data_volume
 ```
 
-Now run `docker-compose up matrix-reminder-bot` to start the bot. This will use
-the `matrix-reminder-bot:latest` tag from Docker Hub. If you would rather run
-the local code instead, use `docker-compose up
-matrix-reminder-bot-local-checkout`.
+Run `start-compose.sh` to start the bot. This will use the
+`matrix-reminder-bot:latest` tag from Docker Hub. If you would rather run the
+local code instead, use `start-compose.sh --dev`.
 
 ## Building the Image
 
