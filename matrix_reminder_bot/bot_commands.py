@@ -99,12 +99,13 @@ class Command(object):
             logger.debug("Got recurring time: %s", recurse_time_str)
 
             # Convert the recurse time to a datetime object
-            recurse_time = Command._parse_str_to_time(recurse_time_str)
+            recurse_time = self._parse_str_to_time(recurse_time_str)
 
             # Generate a timedelta between now and the recurring time
             # `recurse_time` is guaranteed to always be in the future
             # Round datetime.now() to the nearest second for better time display
-            recurse_timedelta = recurse_time - datetime.now().replace(microsecond=0)
+            current_time = datetime.now(tz=self.config.timezone).replace(microsecond=0)
+            recurse_timedelta = recurse_time - current_time
             logger.debug("Recurring timedelta: %s", recurse_timedelta)
 
             # Extract the start time
@@ -114,12 +115,11 @@ class Command(object):
             logger.debug("Start time: %s", time_str)
 
         # Convert start time string to a datetime object
-        time = Command._parse_str_to_time(time_str)
+        time = self._parse_str_to_time(time_str)
 
         return time, reminder_text, recurse_timedelta
 
-    @staticmethod
-    def _parse_str_to_time(time_str: str) -> datetime:
+    def _parse_str_to_time(self, time_str: str) -> datetime:
         """Converts a human-readable, future time string to a datetime object
 
         Args:
@@ -131,12 +131,19 @@ class Command(object):
         Raises:
             CommandError: if conversion was not successful, or time is in the past.
         """
-        time = dateparser.parse(time_str, settings={"PREFER_DATES_FROM": "future"})
+        time = dateparser.parse(
+            time_str,
+            settings={
+                "PREFER_DATES_FROM": "future",
+                "RETURN_AS_TIMEZONE_AWARE": True,
+                "TIMEZONE": self.config.timezone.zone,
+            }
+        )
         if not time:
             raise CommandError(f"The given time '{time_str}' is invalid.")
 
         # Disallow times in the past
-        if time < datetime.now():
+        if time < datetime.now(tz=self.config.timezone):
             raise CommandError(f"The given time '{time_str}' is in the past.")
 
         # Round datetime object to the nearest second for nicer display
