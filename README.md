@@ -30,7 +30,7 @@ be aware that they are more complex.
 
 ### Docker
 
-Follow the docker [installation instructions](docker/README.md#setup).
+**Recommended.** Follow the docker [installation instructions](docker/README.md#setup).
 
 ### Native installation
 
