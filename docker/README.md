@@ -58,8 +58,9 @@ docker volume create \
 ```
 
 Run `start-compose.sh` to start the bot. This will use the
-`matrix-reminder-bot:latest` tag from Docker Hub. If you would rather run the
-local code instead, use `start-compose.sh --dev`.
+`matrix-reminder-bot:latest` tag from Docker Hub.
+
+If you would rather run from the checked out code, use `start-compose.sh --dev`.
 
 ## Building the Image
 

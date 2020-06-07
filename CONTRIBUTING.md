@@ -1,18 +1,18 @@
 # Contributing to matrix-reminder-bot
 
 Thank you for taking interest in this little project. Below is some information
-to help you out with that PR!
+to help you with contributing.
 
 ## Setting up your development environment
 
 ### Using `docker-compose`
 
-**It is recommended** to use `docker-compose` to run matrix-reminder-bot while
-developing, as all necessary dependencies are handled for you. After installing
-`docker-compose`:
+It is **recommended** to use Docker Compose to run matrix-reminder-bot while
+developing, as all necessary dependencies are handled for you. After
+installation and ensuring the `docker-compose` command works, you need to:
 
 1. Create a data directory and config file by following the
-   [docker setup instructions](dockers/README.md#setup).
+   [docker setup instructions](docker#setup).
 
 2. Create a docker volume pointing to that directory:
 

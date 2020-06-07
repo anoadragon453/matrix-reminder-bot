@@ -37,14 +37,17 @@ be aware that they are more complex.
 #### Install libolm
 
 You can install [libolm](https://gitlab.matrix.org/matrix-org/olm) from source,
-or alternatively, check your system's package manager. Note that version
-`3.0.0` or greater is required.
+or alternatively, check your system's package manager. Version `3.0.0` or
+greater is required.
 
 **(Optional) postgres development headers**
 
-If you want to use postgres as a database backend (see the Configuration
-section for more details), you'll need to install postgres development
-headers:
+By default, matrix-reminder-bot uses SQLite as its storage backend. This is
+fine for a few hundred users, but if you plan to support a much higher volume
+of requests, you may consider using Postgres as a database backend instead.
+
+If you want to use postgres as a database backend, you'll need to install
+postgres development headers:
 
 Debian/Ubuntu:
 
@@ -73,9 +76,8 @@ Install python dependencies:
 pip install matrix-reminder-bot
 ```
 
-If you want to use postgres as a database backend (see the Configuration
-section for more details), use the following command to install postgres
-dependencies alongside those that are necessary:
+(Optional) If you want to use postgres as a database backend, use the following
+command to install postgres dependencies alongside those that are necessary:
 
 ```
 pip install "matrix-reminder-bot[postgres]"
@@ -92,10 +94,6 @@ cp sample.config.yaml config.yaml
 Edit the config file. The `matrix` section must be modified at least.
 
 #### (Optional) Set up a Postgres database
-
-By default, matrix-reminder-bot uses SQLite as its storage backend. This is
-fine for a few hundred users, but if you plan to support a much higher volume
-of requests, you may consider using Postgres as a database backend instead.
 
 Create a postgres user and database for matrix-reminder-bot:
 
