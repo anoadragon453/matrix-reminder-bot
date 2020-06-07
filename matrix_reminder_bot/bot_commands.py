@@ -351,7 +351,7 @@ class Command(object):
 
         if reminders:
             text = "Reminders for this room:\n\n"
-            text += "\n\n".join(reminders)
+            text += "\n".join(reminders)
         else:
             text = "There are no reminders for this room."
 
