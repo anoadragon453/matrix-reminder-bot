@@ -69,10 +69,16 @@ class Callbacks(object):
             # An expected error occurred. Inform the user
             msg = f"Error: {e.msg}"
             await send_text_to_room(self.client, room.room_id, msg)
+
+            # Print traceback
+            logger.exception("CommandError while processing command:")
         except Exception as e:
             # An unknown error occurred. Inform the user
             msg = f"An unknown error occurred: {e}"
             await send_text_to_room(self.client, room.room_id, msg)
+
+            # Print traceback
+            logger.exception("Unknown error while processing command:")
 
     async def invite(self, room, event):
         """Callback for when an invite is received. Join the room specified in the invite"""
