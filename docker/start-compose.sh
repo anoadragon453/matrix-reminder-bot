@@ -14,6 +14,13 @@
 # docker-compose.yml and .env files
 cd `dirname "$0"`
 
+function on_exit {
+  cd -
+}
+
+# Ensure we change back to the old directory on script exit
+trap on_exit EXIT
+
 # To allow the docker container to connect to services running on the host,
 # we need to use the host's internal ip address. Attempt to retrieve this.
 #
@@ -43,9 +50,10 @@ fi
 
 # Determine whether to run from the release version or the local checkout
 if [ "$1" == "--dev" ]; then
-  COMPOSE_SERVICE="local-checkout"
+  # Ensure the latest code is built
+  docker-compose build local-checkout
+  docker-compose up local-checkout
 else
-  COMPOSE_SERVICE="matrix-reminder-bot"
+  docker-compose up matrix-reminder-bot
 fi
 
-docker-compose up $COMPOSE_SERVICE || cd -  # change back to the original directory, even if the build fails
