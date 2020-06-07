@@ -4,8 +4,9 @@ import re
 import sys
 from typing import Any, List
 
-import yaml
+import pytz
 
+import yaml
 from matrix_reminder_bot.errors import ConfigError
 
 logger = logging.getLogger()
@@ -85,6 +86,10 @@ class Config(object):
 
         self.command_prefix = self._get_cfg(["command_prefix"], default="!c")
 
+        # Reminder configuration
+        timezone_str = self._get_cfg(["reminders", "timezone"], default="Etc/UTC")
+        self.timezone = pytz.timezone(timezone_str)
+
     def _get_cfg(
             self,
             path: List[str],
@@ -106,7 +111,7 @@ class Config(object):
             # If at any point we don't get our expected option...
             if config is None:
                 # Raise an error if it was required
-                if required or not default:
+                if required and not default:
                     raise ConfigError(f"Config option {'.'.join(path)} is required")
 
                 # or return the default value
