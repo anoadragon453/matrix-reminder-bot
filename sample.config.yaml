@@ -13,7 +13,7 @@ matrix:
   user_password: ""
   # The public URL at which the homeserver's Client-Server API can be accessed
   homeserver_url: https://example.com
-  # The device ID that is **non pre-existing** device
+  # The device ID that is a **non pre-existing** device
   # If this device ID already exists, messages will be dropped silently in
   # encrypted rooms
   device_id: REMINDER
@@ -33,7 +33,7 @@ storage:
   store_path: "./store"
 
 reminders:
-  # Uncomment to set a default timezone that will be used when creating reminders
+  # Uncomment to set a default timezone that will be used when creating reminders.
   # If not set, UTC will be used
   #timezone: "Europe/London"
 
