@@ -209,7 +209,7 @@ class Storage(object):
                 continue
 
             # Create and record the reminder
-            REMINDERS[(row[3], row[0])] = Reminder(
+            REMINDERS[(room_id, reminder_text)] = Reminder(
                 client=client,
                 store=self,
                 reminder_text=reminder_text,
