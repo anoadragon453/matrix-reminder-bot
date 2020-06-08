@@ -55,13 +55,22 @@ RUN apk add --no-cache \
     libpq \
     postgresql-dev
 
-# Copy source code
-COPY *.py *.md matrix-reminder-bot /src/
+# Install python runtime modules. We do this before copying the source code
+# such that these dependencies can be cached
+# This speeds up subsequent image builds when the source code is changed
+RUN mkdir -p /src/matrix_reminder_bot
+COPY matrix_reminder_bot/__init__.py /src/matrix_reminder_bot/
+COPY README.md matrix-reminder-bot /src/
 
-RUN mkdir /src/matrix_reminder_bot
-COPY matrix_reminder_bot/*.py src/matrix_reminder_bot/
+# Builds the dependencies
+COPY setup.py /src/setup.py
+RUN pip install --prefix="/python-libs" --no-warn-script-location "/src/.[postgres]"
 
-# Install python runtime modules
+# Now copy the source code
+COPY *.py *.md /src/
+COPY matrix_reminder_bot/*.py /src/matrix_reminder_bot/
+
+# And build the final module
 RUN pip install --prefix="/python-libs" --no-warn-script-location "/src/.[postgres]"
 
 ##
