@@ -63,7 +63,7 @@ class Command(object):
         logger.debug("Parsing cron command arguments: %s", args_str)
 
         # Split into cron tab and reminder text
-        cron_tab, reminder_text = args_str.split(",", maxsplit=1)
+        cron_tab, reminder_text = args_str.split(";", maxsplit=1)
 
         return cron_tab, reminder_text.strip()
 
@@ -81,7 +81,7 @@ class Command(object):
         args_str = " ".join(self.args)
         logger.debug("Parsing command arguments: %s", args_str)
 
-        time_str, reminder_text = args_str.split(",", maxsplit=1)
+        time_str, reminder_text = args_str.split(";", maxsplit=1)
         logger.debug("Got time: %s", time_str)
 
         # Clean up the input
@@ -109,7 +109,7 @@ class Command(object):
             logger.debug("Recurring timedelta: %s", recurse_timedelta)
 
             # Extract the start time
-            time_str, reminder_text = reminder_text.split(",", maxsplit=1)
+            time_str, reminder_text = reminder_text.split(";", maxsplit=1)
             reminder_text = reminder_text.strip()
 
             logger.debug("Start time: %s", time_str)
@@ -398,7 +398,7 @@ class Command(object):
 Create an optionally recurring reminder that notifies the reminder creator:
 
 ```
-!remindme [every <recurring time>,] <start time>, <reminder text>
+!remindme [every <recurring time>;] <start time>; <reminder text>
 ```
 
 Create an optionally recurring reminder that notifies the whole room.
@@ -406,7 +406,7 @@ Create an optionally recurring reminder that notifies the whole room.
 the room):
 
 ```
-!remindroom [every <recurring time>,] <start time>, <reminder text>
+!remindroom [every <recurring time>;] <start time>; <reminder text>
 ```
 
 List all active reminders for a room:
@@ -427,13 +427,13 @@ Create a reminder that will repeatedly sound every 5m after its usual
 fire time. Otherwise, the syntax is the same as a reminder:
 
 ```
-!alarmme [every <recurring time>,] <start time>, <reminder text>
+!alarmme [every <recurring time>;] <start time>; <reminder text>
 ```
 
 or for notifying the whole room:
 
 ```
-!alarmroom [every <recurring time>,] <start time>, <reminder text>
+!alarmroom [every <recurring time>;] <start time>; <reminder text>
 ```
 
 Once firing, an alarm can be silenced with:
@@ -448,7 +448,7 @@ If you need more complicated recurring reminders, you can make use of
 cron-tab syntax:
 
 ```
-!remindme cron <min> <hour> <day of month> <month> <day of week>, <reminder text>
+!remindme cron <min> <hour> <day of month> <month> <day of week>; <reminder text>
 ```
 
 This syntax is supported by any `!remind...` or `!alarm...` command above.

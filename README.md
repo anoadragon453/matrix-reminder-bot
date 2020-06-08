@@ -146,19 +146,18 @@ Invite the bot to a room and it should accept the invite and join.
 Have the bot ping you in the room about something:
 
 ```
-!remindme <time>, <reminder text>
+!remindme <time>; <reminder text>
 ```
 
-* `<time>` is an amount of time expressed in the following form:
-  `5m` for 5 minutes, `3h` for 3 hours, `10d` for 10 days. These
-  cannot be combined together.
+* `<time>` is a time that can be expressed in natural language. Examples
+   include "tomorrow at noon", "on thursday at 5pm", "in 1 week", etc.
 * `<reminder text>` is the text that the bot will remind you with.
 
 Have the bot ping you and everyone else in the room about something
 (assuming the bot has permissions to do so):
 
 ```
-!remindroom <time>, <reminder text>
+!remindroom <time>; <reminder text>
 ```
 
 ### Recurring reminders
@@ -168,11 +167,11 @@ time, then the time that the reminder should first go off, and then
 the reminder text:
 
 ```
-!remindme every 1w, tuesday, take out the trash
+!remindme every 1w; tuesday; take out the trash
 ```
 
 ```
-!remindroom every 5m, 1m, you are loved
+!remindroom every 5m; 1m; you are loved
 ```
 
 ### Cron-style reminders
@@ -185,13 +184,13 @@ In short they allow you to execute more complicated, recurring
 reminders, such as those that should only fire during weekdays.
 
 ```
-!remindme cron * 9 * * mon-fri, time for the daily stand up
+!remindme cron * 9 * * mon-fri; time for the daily stand up
 ```
 
 The above reminder would fire each weekday at 9:00am.
 
 ```
-!remindme cron 0/30 9-18 * * mon,wed,fri, take a short break
+!remindme cron 0/30 9-18 * * mon,wed,fri; take a short break
 ```
 
 The above reminder would fire every 30 minutes after 9:00am,
@@ -226,11 +225,11 @@ Creating an alarm is the same syntax as creating a reminder, besides a
 different command:
 
 ```
-!alarmme <time>, <reminder text>
+!alarmme <time>; <reminder text>
 ```
 
 ```
-!alarmroom every <recurring time>, <start time>, <reminder text>
+!alarmroom every <recurring time>; <start time>; <reminder text>
 ```
 
 ### Silencing an alarm
