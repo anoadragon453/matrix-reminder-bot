@@ -62,6 +62,12 @@ Run `start-compose.sh` to start the bot. This will use the
 
 If you would rather run from the checked out code, use `start-compose.sh --dev`.
 
+**Note:** If you are trying to connect to a Synapse instance running on the
+host, you need to allow the IP address of the docker container to connect. This
+is controlled by `bind_addresses` in the `listeners` section of Synapse's
+config. If present, either add the docker internal IP address to the list, or
+remove the option altogether to allow all addresses.
+
 ## Building the Image
 
 To build the image from source, use the following `docker build` command from

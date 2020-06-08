@@ -25,6 +25,12 @@ installation and ensuring the `docker-compose` command works, you need to:
 
 Run `docker/start-compose.sh --dev` to start the bot.
 
+**Note:** If you are trying to connect to a Synapse instance running on the
+host, you need to allow the IP address of the docker container to connect. This
+is controlled by `bind_addresses` in the `listeners` section of Synapse's
+config. If present, either add the docker internal IP address to the list, or
+remove the option altogether to allow all addresses.
+
 ### Running natively
 
 If you would rather not or are unable to run docker, please follow the Native
