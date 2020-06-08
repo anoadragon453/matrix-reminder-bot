@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, Optional, Tuple
+from typing import Optional, Tuple
 
 import dateparser
 from nio import AsyncClient, MatrixRoom

@@ -1,4 +1,5 @@
 import logging
+import pytz
 from datetime import datetime, timedelta
 from typing import Dict
 
@@ -183,16 +184,41 @@ class Storage(object):
         logger.debug("Loaded reminder rows: %s", rows)
 
         for row in rows:
+            # Extract reminder data
+            reminder_text = row[0]
+            start_time = datetime.fromisoformat(row[1]) if row[1] else None
+            recurse_timedelta = timedelta(seconds=row[2]) if row[2] else None
+            cron_tab = row[3]
+            room_id = row[4]
+            target_user = row[5]
+            alarm = row[6]
+
+            # If this is a one-off reminder whose start time is in the past, then it will
+            # never fire. Ignore and delete the row from the db
+            if (
+                    not recurse_timedelta
+                    and not cron_tab
+                    and start_time < datetime.now(tz=pytz.utc)
+            ):
+                logger.debug(
+                    "Deleting missed reminder in room %s: %s - %s",
+                    room_id, reminder_text, start_time
+                )
+
+                self.delete_reminder(room_id, reminder_text)
+                continue
+
+            # Create and record the reminder
             REMINDERS[(row[3], row[0])] = Reminder(
                 client=client,
                 store=self,
-                reminder_text=row[0],
-                start_time=datetime.fromisoformat(row[1]) if row[1] else None,
-                recurse_timedelta=timedelta(seconds=row[2]) if row[2] else None,
-                cron_tab=row[3],
-                room_id=row[4],
-                target_user=row[5],
-                alarm=row[6],
+                reminder_text=reminder_text,
+                start_time=start_time,
+                recurse_timedelta=recurse_timedelta,
+                cron_tab=cron_tab,
+                room_id=room_id,
+                target_user=target_user,
+                alarm=alarm,
             )
 
     def store_reminder(self, reminder: Reminder):
@@ -218,7 +244,7 @@ class Storage(object):
             )
         """, (
             reminder.reminder_text,
-            reminder.start_time,
+            reminder.start_time.isoformat(),
             delta_seconds,
             reminder.cron_tab,
             reminder.room_id,
