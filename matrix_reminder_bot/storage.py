@@ -244,7 +244,7 @@ class Storage(object):
             )
         """, (
             reminder.reminder_text,
-            reminder.start_time.isoformat(),
+            reminder.start_time.isoformat() if reminder.start_time else None,
             delta_seconds,
             reminder.cron_tab,
             reminder.room_id,
