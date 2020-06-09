@@ -1,4 +1,4 @@
-# Matrix Reminder Bot
+# Matrix Reminder Bot <a href="https://matrix.to/#/#matrix-reminder-bot:matrix.org"><img src="https://img.shields.io/matrix/matrix-reminder-bot:matrix.org?color=blue&label=Join%20the%20Matrix%20Room&server_fqdn=matrix-client.matrix.org" /></a>
 
 ![example of interacting with the bot](screenshot.png)
 
