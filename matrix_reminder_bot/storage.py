@@ -209,7 +209,7 @@ class Storage(object):
                 continue
 
             # Create and record the reminder
-            REMINDERS[(room_id, reminder_text)] = Reminder(
+            REMINDERS[(room_id, reminder_text.upper())] = Reminder(
                 client=client,
                 store=self,
                 reminder_text=reminder_text,
@@ -255,5 +255,5 @@ class Storage(object):
     def delete_reminder(self, room_id: str, reminder_text: str):
         """Delete a reminder via its reminder text and the room it was sent in"""
         self._execute("""
-            DELETE FROM reminder WHERE room_id = ? AND text = ?
-        """, (room_id, reminder_text,))
+            DELETE FROM reminder WHERE room_id = ? AND UPPER(text) = ?
+        """, (room_id, reminder_text.upper(),))

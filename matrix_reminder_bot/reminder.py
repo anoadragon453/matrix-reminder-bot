@@ -110,7 +110,7 @@ class Reminder(object):
                         seconds=int(timedelta_seconds(ALARM_TIMEDELTA)),
                     )
                 )
-                ALARMS[(self.room_id, self.reminder_text)] = self.alarm_job
+                ALARMS[(self.room_id, self.reminder_text.upper())] = self.alarm_job
 
         # Send the message to the room
         await send_text_to_room(self.client, self.room_id, message, notice=False)
@@ -129,13 +129,13 @@ class Reminder(object):
         # Send the message to the room
         await send_text_to_room(self.client, self.room_id, message, notice=False)
 
-    def cancel(self, cancel_alarm: bool = True):
+    def cancel(self):
         """Cancels a reminder and all recurring instances"""
         logger.debug("Cancelling reminder in room %s: %s", self.room_id, self.reminder_text)
 
         # Remove from the in-memory reminder and alarm dicts
-        REMINDERS.pop((self.room_id, self.reminder_text), None)
-        ALARMS.pop((self.room_id, self.reminder_text), None)
+        REMINDERS.pop((self.room_id, self.reminder_text.upper()), None)
+        ALARMS.pop((self.room_id, self.reminder_text.upper()), None)
 
         # Delete the reminder from the database
         self.store.delete_reminder(self.room_id, self.reminder_text)
@@ -148,5 +148,10 @@ class Reminder(object):
 
 
 # Global dictionaries
+#
+# Both feature (room_id, reminder_text) tuples as keys
+#
+# reminder_text should be accessed and stored as uppercase in order to
+# allow for case-insensitive matching when carrying out user actions
 REMINDERS: Dict[Tuple[str, str], Reminder] = {}
 ALARMS: Dict[Tuple[str, str], Job] = {}

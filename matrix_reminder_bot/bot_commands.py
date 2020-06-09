@@ -216,7 +216,7 @@ class Command(object):
                 self.room.room_id, recurse_timedelta, reminder_text,
             )
 
-        if (self.room.room_id, reminder_text) in REMINDERS:
+        if (self.room.room_id, reminder_text.upper()) in REMINDERS:
             await send_text_to_room(
                 self.client,
                 self.room.room_id,
@@ -238,7 +238,7 @@ class Command(object):
         )
 
         # Record the reminder
-        REMINDERS[(self.room.room_id, reminder_text)] = reminder
+        REMINDERS[(self.room.room_id, reminder_text.upper())] = reminder
         self.store.store_reminder(reminder)
 
         # Send a message to the room confirming the creation of the reminder
@@ -288,11 +288,11 @@ class Command(object):
         """Silences an ongoing alarm"""
         # Attempt to find a reminder with an alarm currently going off
         reminder_text = " ".join(self.args)
-        alarm_job = ALARMS.get((self.room.room_id, reminder_text))
+        alarm_job = ALARMS.get((self.room.room_id, reminder_text.upper()))
 
         if alarm_job:
             # We found a reminder with an alarm
-            ALARMS.pop((self.room.room_id, reminder_text), None)
+            ALARMS.pop((self.room.room_id, reminder_text.upper()), None)
 
             if SCHEDULER.get_job(alarm_job.id):
                 # Silence the alarm
@@ -303,7 +303,7 @@ class Command(object):
             # We didn't find an alarm that's currently firing...
             # Be helpful and check if this is a known reminder without an alarm
             # currently going off
-            reminder = REMINDERS.get((self.room.room_id, reminder_text))
+            reminder = REMINDERS.get((self.room.room_id, reminder_text.upper()))
             if reminder:
                 text = (
                     f"The reminder '{reminder_text}' does not currently have an "
@@ -371,7 +371,7 @@ class Command(object):
         logger.debug("Known reminders: %s", REMINDERS)
         logger.debug("Deleting reminder in room %s: %s", self.room.room_id, reminder_text)
 
-        reminder = REMINDERS.get((self.room.room_id, reminder_text))
+        reminder = REMINDERS.get((self.room.room_id, reminder_text.upper()))
         if reminder:
             # Cancel the reminder
             reminder.cancel()
