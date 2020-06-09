@@ -204,7 +204,7 @@ class Storage(object):
             alarm = row[6]
 
             # If start_time does not have a timezone associated, assume UTC
-            if start_time.tzinfo is None:
+            if start_time and start_time.tzinfo is None:
                 start_time = start_time.replace(tzinfo=pytz.utc)
 
             # If this is a one-off reminder whose start time is in the past, then it will
