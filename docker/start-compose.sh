@@ -51,8 +51,7 @@ fi
 # Determine whether to run from the release version or the local checkout
 if [ "$1" == "--dev" ]; then
   # Ensure the latest code is built
-  docker-compose build local-checkout
-  docker-compose up local-checkout
+  docker-compose up --build local-checkout
 else
   docker-compose up matrix-reminder-bot
 fi
