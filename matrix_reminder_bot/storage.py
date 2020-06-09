@@ -111,7 +111,11 @@ class Storage(object):
             current_migration_version: The migration version that the database is
                 currently at
         """
+        logger.debug("Checking for necessary database migrations...")
+
         if current_migration_version < 1:
+            logger.info("Migrating the database from v0 to v1...")
+
             # Add cron_tab column, prevent start_time from being required
             #
             # As SQLite3 is quite limited, we need to create a new table and populate it
@@ -159,6 +163,12 @@ class Storage(object):
             self._execute("""
                 DROP TABLE reminder_temp
            """)
+
+            self._execute("""
+                 UPDATE migration_version SET version = 1
+            """)
+
+            logger.info("Database migrated to v1")
 
     def load_reminders(self, client):
         """Load reminders from the database
