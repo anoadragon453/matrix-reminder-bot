@@ -91,6 +91,7 @@ async def main():
                 await client.keys_upload()
 
             logger.info(f"Logged in as {config.user_id}")
+            logger.info(f"Startup complete")
 
             await client.sync_forever(timeout=30000, full_state=True)
 
