@@ -30,9 +30,8 @@ async def main():
     # Configure the database
     store = Storage(config.database)
 
-    # Configure and start the python job scheduler
+    # Configure the python job scheduler
     SCHEDULER.configure({"apscheduler.timezone": config.timezone})
-    SCHEDULER.start()
 
     # Configuration options for the AsyncClient
     client_config = AsyncClientConfig(
@@ -92,6 +91,9 @@ async def main():
 
             logger.info(f"Logged in as {config.user_id}")
             logger.info(f"Startup complete")
+
+            # Allow jobs to fire
+            SCHEDULER.start()
 
             await client.sync_forever(timeout=30000, full_state=True)
 
