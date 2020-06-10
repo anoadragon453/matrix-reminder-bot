@@ -203,16 +203,37 @@ class Storage(object):
             target_user = row[5]
             alarm = row[6]
 
-            # If start_time does not have a timezone associated, assume UTC
-            if start_time and start_time.tzinfo is None:
-                start_time = start_time.replace(tzinfo=pytz.utc)
+            # Unfortunately, APScheduler makes use of the pytz library, which stores timezone
+            # information in a format that is incompatible with the default python dateutil
+            # timezone. When pulling timezones out of the database, the datetime objects will
+            # have a timezone that is incompatible with APScheduler and crash the program.
+            #
+            # A datetime can only be stored in start_time, so we first check if start_time
+            # is specified on this reminder
+            if start_time:
+                # If so, convert it's tzinfo object to a pytz-compatible one
+                if start_time.tzinfo:
+                    # Get the default timezone object's timezone offset in minutes
+                    offset_minutes = timedelta_seconds(datetime.utcoffset(start_time)) / 60
+
+                    # Create a pytz timezone object using the offset minutes
+                    pytz_timezone = pytz.FixedOffset(offset_minutes)
+
+                    # Replace the datetime's timezone object with the pytz one
+                    start_time = start_time.replace(tzinfo=pytz_timezone)
+
+                # XXX: Backwards compatibility hack: It was possible for times to be stored in the
+                # database that did not have timezone information. This was before timezones were
+                # implemented. If start_time does not have a timezone associated, assume UTC
+                else:
+                    start_time = start_time.replace(tzinfo=pytz.utc)
 
             # If this is a one-off reminder whose start time is in the past, then it will
             # never fire. Ignore and delete the row from the db
             if (
                     not recurse_timedelta
                     and not cron_tab
-                    and start_time < datetime.now(tz=pytz.utc)
+                    and start_time and start_time < datetime.now(tz=pytz.utc)
             ):
                 logger.debug(
                     "Deleting missed reminder in room %s: %s - %s",
