@@ -142,6 +142,9 @@ class Command(object):
         if not time:
             raise CommandError(f"The given time '{time_str}' is invalid.")
 
+        # Convert to pytz-compatible timezone
+        time = time.replace(tzinfo=self.config.timezone)
+
         # Disallow times in the past
         if time < datetime.now(tz=self.config.timezone):
             raise CommandError(f"The given time '{time_str}' is in the past.")
