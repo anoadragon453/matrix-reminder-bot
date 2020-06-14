@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Tuple
 
 import dateparser
+import pytz
 from nio import AsyncClient, MatrixRoom
 from nio.events.room_events import RoomMessageText
 from readabledelta import readabledelta
@@ -104,7 +105,7 @@ class Command(object):
             # Generate a timedelta between now and the recurring time
             # `recurse_time` is guaranteed to always be in the future
             # Round datetime.now() to the nearest second for better time display
-            current_time = datetime.now(tz=self.config.timezone).replace(microsecond=0)
+            current_time = datetime.now().replace(microsecond=0)
             recurse_timedelta = recurse_time - current_time
             logger.debug("Recurring timedelta: %s", recurse_timedelta)
 
@@ -135,18 +136,14 @@ class Command(object):
             time_str,
             settings={
                 "PREFER_DATES_FROM": "future",
-                "RETURN_AS_TIMEZONE_AWARE": True,
-                "TIMEZONE": self.config.timezone.zone,
+                "TIMEZONE": self.config.timezone,
             }
         )
         if not time:
             raise CommandError(f"The given time '{time_str}' is invalid.")
 
-        # Convert to pytz-compatible timezone
-        time = time.replace(tzinfo=self.config.timezone)
-
         # Disallow times in the past
-        if time < datetime.now(tz=self.config.timezone):
+        if time < datetime.now():
             raise CommandError(f"The given time '{time_str}' is in the past.")
 
         # Round datetime object to the nearest second for nicer display
@@ -170,7 +167,8 @@ class Command(object):
             return
 
         # Convert a timedelta to a formatted time (ex. May 25 2020, 01:31)
-        human_readable_start_time = reminder.start_time.strftime("%b %d %Y, %H:%M")
+        start_time = reminder.start_time.replace(tzinfo=pytz.timezone(reminder.timezone))
+        human_readable_start_time = start_time.strftime("%b %d %Y, %H:%M")
 
         # Get a textual representation of who will be notified by this reminder
         target = "you" if reminder.target_user else "everyone in the room"
@@ -234,6 +232,7 @@ class Command(object):
             self.room.room_id,
             reminder_text,
             start_time=start_time,
+            timezone=self.config.timezone,
             cron_tab=cron_tab,
             recurse_timedelta=recurse_timedelta,
             target_user=target,

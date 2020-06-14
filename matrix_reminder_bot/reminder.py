@@ -30,6 +30,7 @@ class Reminder(object):
         store: A Storage object
         room_id: The ID of the room the reminder should appear in
         start_time: When the reminder should first go off
+        timezone: The database name of the timezone this reminder should act within
         reminder_text: The text to include in the reminder message
         recurse_timedelta: Optional. How often to repeat the reminder
         target_user: Optional. A user ID of a specific user to mention in the room while
@@ -45,6 +46,7 @@ class Reminder(object):
             room_id: str,
             reminder_text: str,
             start_time: Optional[datetime] = None,
+            timezone: Optional[str] = None,
             recurse_timedelta: Optional[timedelta] = None,
             cron_tab: Optional[str] = None,
             target_user: Optional[str] = None,
@@ -53,6 +55,7 @@ class Reminder(object):
         self.client = client
         self.store = store
         self.room_id = room_id
+        self.timezone = timezone
         self.start_time = start_time
         self.reminder_text = reminder_text
         self.cron_tab = cron_tab
@@ -65,7 +68,7 @@ class Reminder(object):
         # Determine how the reminder is triggered
         if cron_tab:
             # Set up a cron trigger
-            trigger = CronTrigger.from_crontab(cron_tab)
+            trigger = CronTrigger.from_crontab(cron_tab, timezone=timezone)
         elif recurse_timedelta:
             # Use an interval trigger (runs multiple times)
             trigger = IntervalTrigger(
@@ -73,10 +76,11 @@ class Reminder(object):
                 # Use a method from apscheduler instead
                 seconds=int(timedelta_seconds(recurse_timedelta)),
                 start_date=start_time,
+                timezone=timezone,
             )
         else:
             # Use a date trigger (runs only once)
-            trigger = DateTrigger(run_date=start_time)
+            trigger = DateTrigger(run_date=start_time, timezone=timezone)
 
         # Note down the job for later manipulation
         self.job = SCHEDULER.add_job(

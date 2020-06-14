@@ -4,8 +4,9 @@ import re
 import sys
 from typing import Any, List
 
-import yaml
 import pytz
+import yaml
+
 from matrix_reminder_bot.errors import ConfigError
 
 logger = logging.getLogger()
@@ -86,8 +87,7 @@ class Config(object):
         self.command_prefix = self._get_cfg(["command_prefix"], default="!c")
 
         # Reminder configuration
-        self.timezone_str = self._get_cfg(["reminders", "timezone"], default="Etc/UTC")
-        self.timezone = pytz.timezone(self.timezone_str)
+        self.timezone = self._get_cfg(["reminders", "timezone"], default="Etc/UTC")
 
     def _get_cfg(
             self,
