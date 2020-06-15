@@ -28,7 +28,7 @@ async def main():
     config = Config(config_filepath)
 
     # Configure the database
-    store = Storage(config.database)
+    store = Storage(config)
 
     # Configure the python job scheduler
     SCHEDULER.configure({"apscheduler.timezone": config.timezone})

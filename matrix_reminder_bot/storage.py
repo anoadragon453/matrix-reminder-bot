@@ -1,44 +1,50 @@
 import logging
-import pytz
 from datetime import datetime, timedelta
-from typing import Dict
 
+import pytz
 from apscheduler.util import timedelta_seconds
 
+from matrix_reminder_bot.config import Config
 from matrix_reminder_bot.reminder import REMINDERS, Reminder
 
-latest_migration_version = 1
+latest_migration_version = 2
 
 logger = logging.getLogger(__name__)
 
 
 class Storage(object):
-    def __init__(self, db: Dict):
+    def __init__(self, config: Config):
         """Setup the database
 
         Runs an initial setup or migrations depending on whether a database file has already
         been created
 
         Args:
-            db: A dictionary containing the following keys:
-                  * type: A string, one of "sqlite" or "postgres"
-                  * connection_string: A string, featuring a connection string that
+            config: The bot config. config.database must be a dictionary containing
+                the following keys:
+                    * type: A string, one of "sqlite" or "postgres"
+                    * connection_string: A string, featuring a connection string that
                         be fed to each respective db library's `connect` method
         """
         # Check which type of database has been configured
-        self.conn = self._get_database_connection(db["type"], db["connection_string"])
+        self.config = config
+        self.conn = self._get_database_connection(
+            config.database["type"], config.database["connection_string"]
+        )
         self.cursor = self.conn.cursor()
-        self.db_type = db["type"]
+        self.db_type = config.database["type"]
 
         # Try to check the current migration version
+        migration_level = 0
         try:
             self._execute("SELECT version FROM migration_version")
             row = self.cursor.fetchone()
-
-            if row[0] < latest_migration_version:
-                self._run_db_migrations(row[0])
+            migration_level = row[0]
         except Exception:
             self._initial_db_setup()
+        finally:
+            if migration_level < latest_migration_version:
+                self._run_db_migrations(migration_level)
 
         logger.info(f"Database initialization of type '{self.db_type}' complete")
 
@@ -99,9 +105,6 @@ class Storage(object):
             CREATE UNIQUE INDEX reminder_room_id_text
             ON reminder(room_id, text)
         """)
-
-        # Start executing db migrations from the beginning
-        self._run_db_migrations(0)
 
     def _run_db_migrations(self, current_migration_version: int):
         """Execute database migrations. Migrates the database to the
@@ -170,6 +173,27 @@ class Storage(object):
 
             logger.info("Database migrated to v1")
 
+        if current_migration_version < 2:
+            logger.info("Migrating the database from v1 to v2...")
+
+            # Add a timezone column to the reminder database, so we can easily keep
+            # track of which timezone a reminder was created in
+            self._execute("""
+                ALTER TABLE reminder
+                    ADD COLUMN timezone TEXT
+            """)
+
+            # Assume the currently configured database timezone for all rows
+            self._execute("""
+                UPDATE reminder SET timezone = ?
+            """, (self.config.timezone,))
+
+            self._execute("""
+                 UPDATE migration_version SET version = 2
+            """)
+
+            logger.info("Database migrated to v2")
+
     def load_reminders(self, client):
         """Load reminders from the database
 
@@ -183,6 +207,7 @@ class Storage(object):
             SELECT
                 text,
                 start_time,
+                timezone,
                 recurse_timedelta_s,
                 cron_tab,
                 room_id,
@@ -197,51 +222,28 @@ class Storage(object):
             # Extract reminder data
             reminder_text = row[0]
             start_time = datetime.fromisoformat(row[1]) if row[1] else None
-            recurse_timedelta = timedelta(seconds=row[2]) if row[2] else None
-            cron_tab = row[3]
-            room_id = row[4]
-            target_user = row[5]
-            alarm = row[6]
-
-            # Unfortunately, APScheduler makes use of the pytz library, which stores timezone
-            # information in a format that is incompatible with the default python dateutil
-            # timezone. When pulling timezones out of the database, the datetime objects will
-            # have a timezone that is incompatible with APScheduler and crash the program.
-            #
-            # A datetime can only be stored in start_time, so we first check if start_time
-            # is specified on this reminder
-            if start_time:
-                # If so, convert it's tzinfo object to a pytz-compatible one
-                if start_time.tzinfo:
-                    # Get the default timezone object's timezone offset in minutes
-                    offset_minutes = timedelta_seconds(datetime.utcoffset(start_time)) / 60
-
-                    # Create a pytz timezone object using the offset minutes
-                    pytz_timezone = pytz.FixedOffset(offset_minutes)
-
-                    # Replace the datetime's timezone object with the pytz one
-                    start_time = start_time.replace(tzinfo=pytz_timezone)
-
-                # XXX: Backwards compatibility hack: It was possible for times to be stored in the
-                # database that did not have timezone information. This was before timezones were
-                # implemented. If start_time does not have a timezone associated, assume UTC
-                else:
-                    start_time = start_time.replace(tzinfo=pytz.utc)
+            timezone = row[2]
+            recurse_timedelta = timedelta(seconds=row[3]) if row[3] else None
+            cron_tab = row[4]
+            room_id = row[5]
+            target_user = row[6]
+            alarm = row[7]
 
             # If this is a one-off reminder whose start time is in the past, then it will
             # never fire. Ignore and delete the row from the db
-            if (
-                    not recurse_timedelta
-                    and not cron_tab
-                    and start_time and start_time < datetime.now(tz=pytz.utc)
-            ):
-                logger.debug(
-                    "Deleting missed reminder in room %s: %s - %s",
-                    room_id, reminder_text, start_time
-                )
+            if start_time and not recurse_timedelta and not cron_tab:
+                # Apply the timezone information for this reminder
+                start_time = start_time.replace(tzinfo=pytz.timezone(timezone))
+                now = datetime.now(tz=pytz.timezone(timezone))
 
-                self.delete_reminder(room_id, reminder_text)
-                continue
+                if start_time < now:
+                    logger.debug(
+                        "Deleting missed reminder in room %s: %s - %s",
+                        room_id, reminder_text, start_time
+                    )
+
+                    self.delete_reminder(room_id, reminder_text)
+                    continue
 
             # Create and record the reminder
             REMINDERS[(room_id, reminder_text.upper())] = Reminder(
@@ -249,6 +251,7 @@ class Storage(object):
                 store=self,
                 reminder_text=reminder_text,
                 start_time=start_time,
+                timezone=timezone,
                 recurse_timedelta=recurse_timedelta,
                 cron_tab=cron_tab,
                 room_id=room_id,
@@ -269,17 +272,19 @@ class Storage(object):
             INSERT INTO reminder (
                 text,
                 start_time,
+                timezone,
                 recurse_timedelta_s,
                 cron_tab,
                 room_id,
                 target_user,
                 alarm
             ) VALUES (
-                ?, ?, ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?, ?
             )
         """, (
             reminder.reminder_text,
             reminder.start_time.isoformat() if reminder.start_time else None,
+            reminder.timezone,
             delta_seconds,
             reminder.cron_tab,
             reminder.room_id,
