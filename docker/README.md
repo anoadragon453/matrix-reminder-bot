@@ -68,7 +68,42 @@ is controlled by `bind_addresses` in the `listeners` section of Synapse's
 config. If present, either add the docker internal IP address to the list, or
 remove the option altogether to allow all addresses.
 
-## Building the Image
+## Updating
+
+To update the container, navigate to the bot's `docker` directory and run:
+
+```
+docker-compose pull matrix-reminder-bot
+```
+
+Then restart the bot.
+
+## Systemd
+
+A systemd service file is provided for your convenience at
+[matrix-reminder-bot.service](matrix-reminder-bot.service). The service uses
+`docker-compose` to start and stop the bot.
+
+Copy the file to `/etc/systemd/system/matrix-reminder-bot.service` and edit to
+match your setup. You can then start the bot with:
+
+```
+systemctl start matrix-reminder-bot
+```
+
+and stop it with:
+
+```
+systemctl stop matrix-reminder-bot
+```
+
+To run the bot on system startup:
+
+```
+systemctl enable matrix-reminder-bot
+```
+
+## Building the image
 
 To build the image from source, use the following `docker build` command from
 the repo's root:

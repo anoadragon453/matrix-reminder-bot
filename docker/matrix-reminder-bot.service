@@ -1,0 +1,16 @@
+[Unit]
+Description=A matrix bot to remind you about things
+
+[Service]
+Type=simple
+User=matrix-reminder-bot
+Group=matrix-reminder-bot
+WorkingDirectory=/path/to/matrix-reminder-bot/docker
+ExecStart=/usr/bin/docker-compose up matrix-reminder-bot
+ExecStop=/usr/bin/docker-compose stop matrix-reminder-bot
+RemainAfterExit=yes
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
