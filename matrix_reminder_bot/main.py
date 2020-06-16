@@ -8,6 +8,7 @@ from time import sleep
 from aiohttp import ClientConnectionError, ServerDisconnectedError
 from nio import (AsyncClient, AsyncClientConfig, InviteMemberEvent,
                  LocalProtocolError, LoginError, RoomMessageText)
+from apscheduler.schedulers import SchedulerAlreadyRunningError
 
 from matrix_reminder_bot.callbacks import Callbacks
 from matrix_reminder_bot.config import Config
@@ -93,12 +94,21 @@ async def main():
             logger.info(f"Startup complete")
 
             # Allow jobs to fire
-            SCHEDULER.start()
+            try:
+                SCHEDULER.start()
+            except SchedulerAlreadyRunningError:
+                pass
 
             await client.sync_forever(timeout=30000, full_state=True)
 
         except (ClientConnectionError, ServerDisconnectedError, TimeoutError):
             logger.warning("Unable to connect to homeserver, retrying in 15s...")
+
+            # Sleep so we don't bombard the server with login requests
+            sleep(15)
+        except Exception as e:
+            logger.warning("Unknown exception occurred: %s", e)
+            logger.warning("Restarting in 15s...")
 
             # Sleep so we don't bombard the server with login requests
             sleep(15)
