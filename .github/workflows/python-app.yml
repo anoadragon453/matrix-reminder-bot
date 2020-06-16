@@ -1,0 +1,37 @@
+# This workflow will install Python dependencies, then lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Lints the codebase
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install isort flake8 flake8-comprehensions black
+        pipe install -e .[all]
+    - name: Lint with flake8
+      run: |
+        # Sort import statements
+        isort -c -df -rc matrix_reminder_bot matrix-reminder-bot
+
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --show-source --statistics
+        
+        # Format the code
+        black --check --diff --include "matrix_reminder_bot/.*\.py matrix-reminder-bot\.py"
