@@ -23,7 +23,7 @@ installation and ensuring the `docker-compose` command works, you need to:
      --opt device="/path/to/data/dir" data_volume
    ```
 
-Run `docker/start-compose.sh --dev` to start the bot.
+Run `docker/start-dev.sh` to start the bot.
 
 **Note:** If you are trying to connect to a Synapse instance running on the
 host, you need to allow the IP address of the docker container to connect. This

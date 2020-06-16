@@ -1,12 +1,10 @@
 #!/bin/bash
-# A script to quickly setup a running instance of matrix-reminder-bot
+# A script to quickly setup a running development environment for
+# matrix-reminder-bot
 #
 # It's primary purpose is to set up docker networking correctly so that
 # the bot can connect to remote services as well as those hosted on
 # the host machine.
-#
-# The command line flag "--dev" can be provided to run the bot from the
-# local code checkout instead of the latest tag on Docker Hub.
 #
 
 # Change directory to where this script is located. We'd like to run
@@ -48,11 +46,5 @@ set HOST_IP_ADDRESS=127.0.0.1"
   fi
 fi
 
-# Determine whether to run from the release version or the local checkout
-if [ "$1" == "--dev" ]; then
-  # Ensure the latest code is built
-  docker-compose up --build local-checkout
-else
-  docker-compose up matrix-reminder-bot
-fi
-
+# Build and run latest code
+docker-compose up --build local-checkout

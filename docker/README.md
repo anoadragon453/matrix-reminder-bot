@@ -57,10 +57,27 @@ docker volume create \
   --opt device="/path/to/data/dir" data_volume
 ```
 
-Run `start-compose.sh` to start the bot. This will use the
-`matrix-reminder-bot:latest` tag from Docker Hub.
+Run the following to start the bot:
 
-If you would rather run from the checked out code, use `start-compose.sh --dev`.
+```
+docker-compose up matrix-reminder-bot
+```
+
+This will start the bot and log the bot's output. You can instead run the container detached
+with the `-d` flag:
+
+```
+docker-compose up -d matrix-reminder-bot
+```
+
+This will use the `matrix-reminder-bot:latest` tag from
+[Docker Hub](https://hub.docker.com/anoa/matrix-reminder-bot).
+
+If you would rather run from the checked out code, you can run:
+
+```
+docker-compose up local-checkout
+```
 
 **Note:** If you are trying to connect to a Synapse instance running on the
 host, you need to allow the IP address of the docker container to connect. This
