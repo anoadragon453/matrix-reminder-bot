@@ -37,14 +37,29 @@ If you would rather not or are unable to run docker, please follow the Native
 Installation, Configuration and Running sections in the
 [project readme](README.md#native-installation).
 
+## Development dependencies
+
+There are some python dependencies that are required for linting/testing etc.
+You can install them with:
+
+```
+pip install -e ".[dev]"
+```
+
 ## Code style
 
 Please follow the [PEP8](https://www.python.org/dev/peps/pep-0008/) style
 guidelines and format your import statements with
 [isort](https://pypi.org/project/isort/).
 
-Eventually there will be some CI to catch you in the act, but for now it's done
-manually :)
+## Linting
+
+Run the following script to automatically format your code. This *should* make
+the linting CI happy:
+
+```
+./scripts-dev/lint.sh
+```
 
 ## What to work on
 
