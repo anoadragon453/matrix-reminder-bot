@@ -41,6 +41,7 @@ setup(
     ],
     extras_require={
         "postgres": ["psycopg2>=2.8.5"],
+        "dev": ["isort==4.3.21", "flake8==3.8.3", "black==19.10b0"],
     },
     classifiers=[
         "License :: OSI Approved :: Apache Software License",
