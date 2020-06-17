@@ -36,4 +36,4 @@ jobs:
 
     - name: PEP8 formatting
       run: |
-        black --check --diff --include "matrix_reminder_bot/.*\.py matrix-reminder-bot\.py"
+        black --check --diff matrix_reminder_bot/ matrix-reminder-bot
