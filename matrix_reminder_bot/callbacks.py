@@ -21,10 +21,7 @@ class Callbacks(object):
     """
 
     def __init__(
-            self,
-            client: AsyncClient,
-            store: Storage,
-            config: Config,
+        self, client: AsyncClient, store: Storage, config: Config,
     ):
         self.client = client
         self.store = store
@@ -54,14 +51,7 @@ class Callbacks(object):
         logger.debug("Command received: %s", msg)
 
         # Assume this is a command and attempt to process
-        command = Command(
-            self.client,
-            self.store,
-            self.config,
-            msg,
-            room,
-            event,
-        )
+        command = Command(self.client, self.store, self.config, msg, room, event,)
 
         try:
             await command.process()
@@ -90,7 +80,8 @@ class Callbacks(object):
             if type(result) == JoinError:
                 logger.error(
                     f"Error joining room {room.room_id} (attempt %d): %s",
-                    attempt, result.message,
+                    attempt,
+                    result.message,
                 )
             else:
                 logger.info(f"Joined {room.room_id}")

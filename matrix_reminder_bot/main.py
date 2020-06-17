@@ -6,9 +6,15 @@ import sys
 from time import sleep
 
 from aiohttp import ClientConnectionError, ServerDisconnectedError
-from nio import (AsyncClient, AsyncClientConfig, InviteMemberEvent,
-                 LocalProtocolError, LoginError, RoomMessageText)
 from apscheduler.schedulers import SchedulerAlreadyRunningError
+from nio import (
+    AsyncClient,
+    AsyncClientConfig,
+    InviteMemberEvent,
+    LocalProtocolError,
+    LoginError,
+    RoomMessageText,
+)
 
 from matrix_reminder_bot.callbacks import Callbacks
 from matrix_reminder_bot.config import Config
@@ -65,13 +71,12 @@ async def main():
             # Try to login with the configured username/password
             try:
                 login_response = await client.login(
-                    password=config.user_password,
-                    device_name=config.device_name,
+                    password=config.user_password, device_name=config.device_name,
                 )
 
                 # Check if login failed. Usually incorrect password
                 if type(login_response) == LoginError:
-                    logger.error(f"Failed to login: %s", login_response.message)
+                    logger.error("Failed to login: %s", login_response.message)
                     return False
             except LocalProtocolError as e:
                 # There's an edge case here where the user hasn't installed the correct C
@@ -79,7 +84,8 @@ async def main():
                 logger.fatal(
                     "Failed to login. Have you installed the correct dependencies? "
                     "https://github.com/poljar/matrix-nio#installation "
-                    "Error: %s", e
+                    "Error: %s",
+                    e,
                 )
                 return False
 
@@ -91,7 +97,7 @@ async def main():
                 await client.keys_upload()
 
             logger.info(f"Logged in as {config.user_id}")
-            logger.info(f"Startup complete")
+            logger.info("Startup complete")
 
             # Allow jobs to fire
             try:
@@ -115,6 +121,7 @@ async def main():
         finally:
             # Make sure to close the client connection on disconnect
             await client.close()
+
 
 if __name__ == "__main__":
     asyncio.get_event_loop().run_until_complete(main())
