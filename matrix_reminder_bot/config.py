@@ -4,13 +4,14 @@ import re
 import sys
 from typing import Any, List
 
-import pytz
 import yaml
 
 from matrix_reminder_bot.errors import ConfigError
 
 logger = logging.getLogger()
-logging.getLogger("peewee").setLevel(logging.INFO)  # Prevent debug messages from peewee lib
+logging.getLogger("peewee").setLevel(
+    logging.INFO
+)  # Prevent debug messages from peewee lib
 
 
 class Config(object):
@@ -27,19 +28,27 @@ class Config(object):
             self.config = yaml.safe_load(file_stream.read())
 
         # Logging setup
-        formatter = logging.Formatter('%(asctime)s | %(name)s [%(levelname)s] %(message)s')
+        formatter = logging.Formatter(
+            "%(asctime)s | %(name)s [%(levelname)s] %(message)s"
+        )
 
         log_level = self._get_cfg(["logging", "level"], default="INFO")
         logger.setLevel(log_level)
 
-        file_logging_enabled = self._get_cfg(["logging", "file_logging", "enabled"], default=False)
-        file_logging_filepath = self._get_cfg(["logging", "file_logging", "filepath"], default="bot.log")
+        file_logging_enabled = self._get_cfg(
+            ["logging", "file_logging", "enabled"], default=False
+        )
+        file_logging_filepath = self._get_cfg(
+            ["logging", "file_logging", "filepath"], default="bot.log"
+        )
         if file_logging_enabled:
             handler = logging.FileHandler(file_logging_filepath)
             handler.setFormatter(formatter)
             logger.addHandler(handler)
 
-        console_logging_enabled = self._get_cfg(["logging", "console_logging", "enabled"], default=True)
+        console_logging_enabled = self._get_cfg(
+            ["logging", "console_logging", "enabled"], default=True
+        )
         if console_logging_enabled:
             handler = logging.StreamHandler(sys.stdout)
             handler.setFormatter(formatter)
@@ -55,13 +64,10 @@ class Config(object):
         if database_path.startswith(sqlite_scheme):
             self.database = {
                 "type": "sqlite",
-                "connection_string": database_path[len(sqlite_scheme):]
+                "connection_string": database_path[len(sqlite_scheme) :],
             }
         elif database_path.startswith(postgres_scheme):
-            self.database = {
-                "type": "postgres",
-                "connection_string": database_path
-            }
+            self.database = {"type": "postgres", "connection_string": database_path}
         else:
             raise ConfigError("Invalid connection string for storage.database")
 
@@ -72,7 +78,9 @@ class Config(object):
             if not os.path.exists(self.store_path):
                 os.mkdir(self.store_path)
             else:
-                raise ConfigError(f"storage.store_path '{self.store_path}' is not a directory")
+                raise ConfigError(
+                    f"storage.store_path '{self.store_path}' is not a directory"
+                )
 
         # Matrix bot account setup
         self.user_id = self._get_cfg(["matrix", "user_id"], required=True)
@@ -81,7 +89,9 @@ class Config(object):
 
         self.user_password = self._get_cfg(["matrix", "user_password"], required=True)
         self.device_id = self._get_cfg(["matrix", "device_id"], required=True)
-        self.device_name = self._get_cfg(["matrix", "device_name"], default="nio-template")
+        self.device_name = self._get_cfg(
+            ["matrix", "device_name"], default="nio-template"
+        )
         self.homeserver_url = self._get_cfg(["matrix", "homeserver_url"], required=True)
 
         self.command_prefix = self._get_cfg(["command_prefix"], default="!c")
@@ -90,10 +100,7 @@ class Config(object):
         self.timezone = self._get_cfg(["reminders", "timezone"], default="Etc/UTC")
 
     def _get_cfg(
-            self,
-            path: List[str],
-            default: Any = None,
-            required: bool = True,
+        self, path: List[str], default: Any = None, required: bool = True,
     ) -> Any:
         """Get a config option from a path and option name, specifying whether it is
         required.

@@ -51,10 +51,12 @@ class Storage(object):
     def _get_database_connection(self, database_type: str, connection_string: str):
         if database_type == "sqlite":
             import sqlite3
+
             # Initialize a connection to the database, with autocommit on
             return sqlite3.connect(connection_string, isolation_level=None)
         elif database_type == "postgres":
             import psycopg2
+
             conn = psycopg2.connect(connection_string)
 
             # Autocommit on
@@ -74,21 +76,27 @@ class Storage(object):
         logger.info("Performing initial database setup...")
 
         # Set up the migration_version table
-        self._execute("""
+        self._execute(
+            """
             CREATE TABLE migration_version (
                 version INTEGER PRIMARY KEY
             )
-        """)
+        """
+        )
 
         # Initially set the migration version to 0
-        self._execute("""
+        self._execute(
+            """
             INSERT INTO migration_version (
                 version
             ) VALUES (?)
-        """, (0,))
+        """,
+            (0,),
+        )
 
         # Set up the reminders table
-        self._execute("""
+        self._execute(
+            """
             CREATE TABLE reminder (
                 text TEXT,
                 start_time TEXT NOT NULL,
@@ -97,14 +105,17 @@ class Storage(object):
                 target_user TEXT,
                 alarm BOOL NOT NULL
             )
-        """)
+        """
+        )
 
         # Create a unique index on room_id, reminder text as no two reminders in the same
         # room can have the same reminder text
-        self._execute("""
+        self._execute(
+            """
             CREATE UNIQUE INDEX reminder_room_id_text
             ON reminder(room_id, text)
-        """)
+        """
+        )
 
     def _run_db_migrations(self, current_migration_version: int):
         """Execute database migrations. Migrates the database to the
@@ -125,7 +136,8 @@ class Storage(object):
             # with existing data
             self._execute("ALTER TABLE reminder RENAME TO reminder_temp")
 
-            self._execute("""
+            self._execute(
+                """
                 CREATE TABLE reminder (
                     text TEXT,
                     start_time TEXT,
@@ -135,8 +147,10 @@ class Storage(object):
                     target_user TEXT,
                     alarm BOOL NOT NULL
                 )
-           """)
-            self._execute("""
+           """
+            )
+            self._execute(
+                """
                 INSERT INTO reminder (
                     text,
                     start_time,
@@ -153,23 +167,32 @@ class Storage(object):
                     target_user,
                     alarm
                 FROM reminder_temp;
-           """)
+           """
+            )
 
-            self._execute("""
+            self._execute(
+                """
                  DROP INDEX reminder_room_id_text
-           """)
-            self._execute("""
+           """
+            )
+            self._execute(
+                """
                 CREATE UNIQUE INDEX reminder_room_id_text
                 ON reminder(room_id, text)
-           """)
+           """
+            )
 
-            self._execute("""
+            self._execute(
+                """
                 DROP TABLE reminder_temp
-           """)
+           """
+            )
 
-            self._execute("""
+            self._execute(
+                """
                  UPDATE migration_version SET version = 1
-            """)
+            """
+            )
 
             logger.info("Database migrated to v1")
 
@@ -178,19 +201,26 @@ class Storage(object):
 
             # Add a timezone column to the reminder database, so we can easily keep
             # track of which timezone a reminder was created in
-            self._execute("""
+            self._execute(
+                """
                 ALTER TABLE reminder
                     ADD COLUMN timezone TEXT
-            """)
+            """
+            )
 
             # Assume the currently configured database timezone for all rows
-            self._execute("""
+            self._execute(
+                """
                 UPDATE reminder SET timezone = ?
-            """, (self.config.timezone,))
+            """,
+                (self.config.timezone,),
+            )
 
-            self._execute("""
+            self._execute(
+                """
                  UPDATE migration_version SET version = 2
-            """)
+            """
+            )
 
             logger.info("Database migrated to v2")
 
@@ -203,7 +233,8 @@ class Storage(object):
         Returns:
             A dictionary from tuple (room_id, reminder text) to Reminder object
         """
-        self._execute("""
+        self._execute(
+            """
             SELECT
                 text,
                 start_time,
@@ -214,7 +245,8 @@ class Storage(object):
                 target_user,
                 alarm
             FROM reminder
-        """)
+        """
+        )
         rows = self.cursor.fetchall()
         logger.debug("Loaded reminder rows: %s", rows)
 
@@ -239,7 +271,9 @@ class Storage(object):
                 if start_time < now:
                     logger.debug(
                         "Deleting missed reminder in room %s: %s - %s",
-                        room_id, reminder_text, start_time
+                        room_id,
+                        reminder_text,
+                        start_time,
                     )
 
                     self.delete_reminder(room_id, reminder_text)
@@ -268,7 +302,8 @@ class Storage(object):
         else:
             delta_seconds = None
 
-        self._execute("""
+        self._execute(
+            """
             INSERT INTO reminder (
                 text,
                 start_time,
@@ -281,19 +316,24 @@ class Storage(object):
             ) VALUES (
                 ?, ?, ?, ?, ?, ?, ?, ?
             )
-        """, (
-            reminder.reminder_text,
-            reminder.start_time.isoformat() if reminder.start_time else None,
-            reminder.timezone,
-            delta_seconds,
-            reminder.cron_tab,
-            reminder.room_id,
-            reminder.target_user,
-            reminder.alarm,
-        ))
+        """,
+            (
+                reminder.reminder_text,
+                reminder.start_time.isoformat() if reminder.start_time else None,
+                reminder.timezone,
+                delta_seconds,
+                reminder.cron_tab,
+                reminder.room_id,
+                reminder.target_user,
+                reminder.alarm,
+            ),
+        )
 
     def delete_reminder(self, room_id: str, reminder_text: str):
         """Delete a reminder via its reminder text and the room it was sent in"""
-        self._execute("""
+        self._execute(
+            """
             DELETE FROM reminder WHERE room_id = ? AND UPPER(text) = ?
-        """, (room_id, reminder_text.upper(),))
+        """,
+            (room_id, reminder_text.upper(),),
+        )

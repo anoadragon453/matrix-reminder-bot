@@ -4,6 +4,7 @@ class ConfigError(RuntimeError):
     Args:
         msg (str): The message displayed to the bot operator on error
     """
+
     def __init__(self, msg: str):
         super(ConfigError, self).__init__("%s" % (msg,))
 
@@ -14,6 +15,7 @@ class CommandError(RuntimeError):
     Args:
         msg: The message that is sent back to the user on error
     """
+
     def __init__(self, msg: str):
         super(CommandError, self).__init__("%s" % (msg,))
         self.msg = msg

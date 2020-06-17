@@ -40,17 +40,17 @@ class Reminder(object):
     """
 
     def __init__(
-            self,
-            client: AsyncClient,
-            store: "storage.Storage",
-            room_id: str,
-            reminder_text: str,
-            start_time: Optional[datetime] = None,
-            timezone: Optional[str] = None,
-            recurse_timedelta: Optional[timedelta] = None,
-            cron_tab: Optional[str] = None,
-            target_user: Optional[str] = None,
-            alarm: bool = False,
+        self,
+        client: AsyncClient,
+        store,
+        room_id: str,
+        reminder_text: str,
+        start_time: Optional[datetime] = None,
+        timezone: Optional[str] = None,
+        recurse_timedelta: Optional[timedelta] = None,
+        cron_tab: Optional[str] = None,
+        target_user: Optional[str] = None,
+        alarm: bool = False,
     ):
         self.client = client
         self.store = store
@@ -63,7 +63,7 @@ class Reminder(object):
         self.target_user = target_user
         self.alarm = alarm
 
-        ## Schedule the reminder
+        # Schedule the reminder
 
         # Determine how the reminder is triggered
         if cron_tab:
@@ -83,10 +83,7 @@ class Reminder(object):
             trigger = DateTrigger(run_date=start_time, timezone=timezone)
 
         # Note down the job for later manipulation
-        self.job = SCHEDULER.add_job(
-            self._fire,
-            trigger=trigger,
-        )
+        self.job = SCHEDULER.add_job(self._fire, trigger=trigger,)
 
         self.alarm_job = None
 
@@ -112,7 +109,7 @@ class Reminder(object):
                         # timedelta.seconds does NOT give you the timedelta converted to
                         # seconds. Use a method from apscheduler instead
                         seconds=int(timedelta_seconds(ALARM_TIMEDELTA)),
-                    )
+                    ),
                 )
                 ALARMS[(self.room_id, self.reminder_text.upper())] = self.alarm_job
 
@@ -135,7 +132,9 @@ class Reminder(object):
 
     def cancel(self):
         """Cancels a reminder and all recurring instances"""
-        logger.debug("Cancelling reminder in room %s: %s", self.room_id, self.reminder_text)
+        logger.debug(
+            "Cancelling reminder in room %s: %s", self.room_id, self.reminder_text
+        )
 
         # Remove from the in-memory reminder and alarm dicts
         REMINDERS.pop((self.room_id, self.reminder_text.upper()), None)

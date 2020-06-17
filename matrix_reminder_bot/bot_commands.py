@@ -19,13 +19,13 @@ logger = logging.getLogger(__name__)
 
 class Command(object):
     def __init__(
-            self,
-            client: AsyncClient,
-            store: Storage,
-            config: Config,
-            command: str,
-            room: MatrixRoom,
-            event: RoomMessageText,
+        self,
+        client: AsyncClient,
+        store: Storage,
+        config: Config,
+        command: str,
+        room: MatrixRoom,
+        event: RoomMessageText,
     ):
         """A command made by a user
 
@@ -43,9 +43,15 @@ class Command(object):
         self.room = room
         self.event = event
 
-        msg_without_prefix = command[len(config.command_prefix):]  # Remove the cmd prefix
-        self.args = msg_without_prefix.split()  # Get a list of all items, split by spaces
-        self.command = self.args.pop(0)  # Remove the first item and save as the command (ex. `remindme`)
+        msg_without_prefix = command[
+            len(config.command_prefix) :
+        ]  # Remove the cmd prefix
+        self.args = (
+            msg_without_prefix.split()
+        )  # Get a list of all items, split by spaces
+        self.command = self.args.pop(
+            0
+        )  # Remove the first item and save as the command (ex. `remindme`)
 
     def _parse_reminder_command_args_for_cron(self) -> Tuple[str, str]:
         """Processes the list of arguments when a cron tab is present
@@ -96,7 +102,7 @@ class Command(object):
         recurse_timedelta = None
         if recurring:
             # Remove "every" and retrieve the recurse time
-            recurse_time_str = time_str[len("every"):].strip()
+            recurse_time_str = time_str[len("every") :].strip()
             logger.debug("Got recurring time: %s", recurse_time_str)
 
             # Convert the recurse time to a datetime object
@@ -134,10 +140,7 @@ class Command(object):
         """
         time = dateparser.parse(
             time_str,
-            settings={
-                "PREFER_DATES_FROM": "future",
-                "TIMEZONE": self.config.timezone,
-            }
+            settings={"PREFER_DATES_FROM": "future", "TIMEZONE": self.config.timezone},
         )
         if not time:
             raise CommandError(f"The given time '{time_str}' is invalid.")
@@ -167,7 +170,9 @@ class Command(object):
             return
 
         # Convert a timedelta to a formatted time (ex. May 25 2020, 01:31)
-        start_time = reminder.start_time.replace(tzinfo=pytz.timezone(reminder.timezone))
+        start_time = reminder.start_time.replace(
+            tzinfo=pytz.timezone(reminder.timezone)
+        )
         human_readable_start_time = start_time.strftime("%b %d %Y, %H:%M")
 
         # Get a textual representation of who will be notified by this reminder
@@ -207,14 +212,22 @@ class Command(object):
 
             logger.debug(
                 "Creating reminder in room %s with cron tab %s: %s",
-                self.room.room_id, cron_tab, reminder_text,
+                self.room.room_id,
+                cron_tab,
+                reminder_text,
             )
         else:
-            start_time, reminder_text, recurse_timedelta = self._parse_reminder_command_args()
+            (
+                start_time,
+                reminder_text,
+                recurse_timedelta,
+            ) = self._parse_reminder_command_args()
 
             logger.debug(
                 "Creating reminder in room %s with delta %s: %s",
-                self.room.room_id, recurse_timedelta, reminder_text,
+                self.room.room_id,
+                recurse_timedelta,
+                reminder_text,
             )
 
         if (self.room.room_id, reminder_text.upper()) in REMINDERS:
@@ -259,8 +272,14 @@ class Command(object):
         elif self.command in ["listreminders", "listalarms"]:
             await self._list_reminders()
         elif self.command in [
-            "delreminder", "deletereminder", "removereminder", "cancelreminder",
-            "delalarm", "deletealarm", "removealarm", "cancelalarm",
+            "delreminder",
+            "deletereminder",
+            "removereminder",
+            "cancelreminder",
+            "delalarm",
+            "deletealarm",
+            "removealarm",
+            "cancelalarm",
         ]:
             await self._delete_reminder()
         elif self.command == "silence":
@@ -348,7 +367,9 @@ class Command(object):
 
             # Display a recurring time if available
             if reminder.recurse_timedelta:
-                human_readable_recurse_timedelta = readabledelta(reminder.recurse_timedelta)
+                human_readable_recurse_timedelta = readabledelta(
+                    reminder.recurse_timedelta
+                )
 
                 line += f" (every {human_readable_recurse_timedelta})"
 
@@ -371,7 +392,9 @@ class Command(object):
         reminder_text = " ".join(self.args)
 
         logger.debug("Known reminders: %s", REMINDERS)
-        logger.debug("Deleting reminder in room %s: %s", self.room.room_id, reminder_text)
+        logger.debug(
+            "Deleting reminder in room %s: %s", self.room.room_id, reminder_text
+        )
 
         reminder = REMINDERS.get((self.room.room_id, reminder_text.upper()))
         if reminder:
@@ -387,8 +410,10 @@ class Command(object):
     async def _help(self):
         """Show the help text"""
         if not self.args:
-            text = ("Hello, I am a reminder bot! Use `help commands` to view available "
-                    "commands.")
+            text = (
+                "Hello, I am a reminder bot! Use `help commands` to view available "
+                "commands."
+            )
             await send_text_to_room(self.client, self.room.room_id, text)
             return
 
