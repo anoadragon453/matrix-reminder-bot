@@ -16,6 +16,10 @@ config.yaml
 # Python
 __pycache__/
 
+# Packaging files
+dist/
+build/
+
 # Log files
 *.log
 
