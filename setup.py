@@ -52,6 +52,7 @@ setup(
         "Programming Language :: Python :: 3.8",
     ],
     long_description=long_description,
+    long_description_content_type="text/markdown",
     # Allow the user to run the bot with `matrix-reminder-bot ...`
     scripts=["matrix-reminder-bot"],
 )
