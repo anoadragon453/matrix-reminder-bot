@@ -37,8 +37,8 @@ class Callbacks(object):
             event (nio.events.room_events.RoomMessageText): The event defining the message
 
         """
-        # Extract the message text
-        msg = event.body
+        # Extract the formatted message text, or the basic text if no formatting is available
+        msg = event.formatted_body or event.body
 
         # Ignore messages from ourselves
         if event.sender == self.client.user:
