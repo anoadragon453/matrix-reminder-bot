@@ -183,7 +183,12 @@ class Command(object):
 
         if reminder.recurse_timedelta:
             # Inform the user how often their reminder will repeat
-            human_readable_recurse_timedelta = readabledelta(reminder.recurse_timedelta)
+            human_readable_recurse_timedelta = self._get_readable_timedelta(
+                reminder.start_time,
+                pytz.timezone(reminder.timezone),
+                reminder.recurse_timedelta,
+            )
+
             text += f", and again every {human_readable_recurse_timedelta}"
 
         # Add some punctuation
@@ -258,6 +263,18 @@ class Command(object):
 
         # Send a message to the room confirming the creation of the reminder
         await self._confirm_reminder(reminder)
+
+    def _get_readable_timedelta(
+            self, dt: datetime,
+            timezone: datetime.tzinfo,
+            delta: timedelta,
+    ) -> str:
+        """Returns a human-readable timedelta string, accounting for timezones"""
+        # Offset the timedelta by the given timezone
+        delta = delta - timezone.utcoffset(dt)
+
+        # Get the human-readable version
+        return readabledelta(delta)
 
     async def process(self):
         """Process the command"""
@@ -367,8 +384,11 @@ class Command(object):
 
             # Display a recurring time if available
             if reminder.recurse_timedelta:
-                human_readable_recurse_timedelta = readabledelta(
-                    reminder.recurse_timedelta
+                # Get a nice, human-readable version to print
+                human_readable_recurse_timedelta = self._get_readable_timedelta(
+                    reminder.start_time,
+                    pytz.timezone(reminder.timezone),
+                    reminder.recurse_timedelta,
                 )
 
                 line += f" (every {human_readable_recurse_timedelta})"
