@@ -116,8 +116,8 @@ async def main():
 
             # Sleep so we don't bombard the server with login requests
             sleep(15)
-        except Exception as e:
-            logger.warning("Unknown exception occurred: %s", e)
+        except Exception:
+            logger.exception("Unknown exception occurred:")
             logger.warning("Restarting in 15s...")
 
             # Sleep so we don't bombard the server with login requests
