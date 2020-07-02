@@ -77,7 +77,11 @@ async def main():
                 # Check if login failed. Usually incorrect password
                 if type(login_response) == LoginError:
                     logger.error("Failed to login: %s", login_response.message)
-                    return False
+                    logger.warning("Trying again in 15s...")
+
+                    # Sleep so we don't bombard the server with login requests
+                    sleep(15)
+                    continue
             except LocalProtocolError as e:
                 # There's an edge case here where the user hasn't installed the correct C
                 # dependencies. In that case, a LocalProtocolError is raised on login.
