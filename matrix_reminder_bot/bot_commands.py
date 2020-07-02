@@ -164,7 +164,7 @@ class Command(object):
             # Special-case cron-style reminders. We currently don't do any special
             # parsing for them
             await send_text_to_room(
-                self.client, self.room.room_id, "Ok, I will remind you!"
+                self.client, self.room.room_id, "OK, I will remind you!"
             )
 
             return
@@ -179,7 +179,7 @@ class Command(object):
         target = "you" if reminder.target_user else "everyone in the room"
 
         # Build the response string
-        text = f"Ok, I will remind {target} on {human_readable_start_time}"
+        text = f"OK, I will remind {target} on {human_readable_start_time}"
 
         if reminder.recurse_timedelta:
             # Inform the user how often their reminder will repeat
