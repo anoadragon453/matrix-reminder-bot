@@ -43,6 +43,13 @@ differences:
   database: "postgres://username:password@postgres/matrix-reminder-bot?sslmode=disable"
   ```
 
+  **Note:** a postgres container is defined in `docker-compose.yaml` for your convenience.
+  If you would like to use it, set your database connection string to:
+
+  ```
+  database: "postgres://postgres:matrixreminderbot@postgres/postgres?sslmode=disable"
+  ```
+
 Change any other config values as necessary. For instance, you may also want to
 store log files in the `/data` directory.
 
@@ -57,23 +64,32 @@ docker volume create \
   --opt device="/path/to/data/dir" data_volume
 ```
 
-Run the following to start the bot:
+If you want to use the postgres container defined in `docker-compose.yaml`, start that
+first:
+
+```
+docker-compose up -d postgres
+```
+
+Start the bot with:
 
 ```
 docker-compose up matrix-reminder-bot
 ```
 
-This will start the bot and log the bot's output. You can instead run the container detached
-with the `-d` flag:
+This will run the bot and log the output to the terminal. You can instead run
+the container detached with the `-d` flag:
 
 ```
 docker-compose up -d matrix-reminder-bot
 ```
 
+(Logs can later be accessed with the `docker logs` command).
+
 This will use the `matrix-reminder-bot:latest` tag from
 [Docker Hub](https://hub.docker.com/anoa/matrix-reminder-bot).
 
-If you would rather run from the checked out code, you can run:
+If you would rather run from the checked out code, you can use:
 
 ```
 docker-compose up local-checkout

@@ -1,14 +1,16 @@
-version: '3' # specify docker-compose version
+version: '3.1' # specify docker-compose version
 
 volumes:
   # Set up with `docker volume create ...`. See docker/README.md for more info.
   data_volume:
     external: true
+  pg_data_volume:
 
 services:
   # Runs from the latest release
   matrix-reminder-bot:
     image: anoa/matrix-reminder-bot
+    restart: always
     volumes:
       - data_volume:/data
     # Used for allowing connections to homeservers hosted on the host machine
@@ -34,3 +36,12 @@ services:
     # Defaults to 127.0.0.1 and is set in docker/.env
     extra_hosts:
       - "localhost:${HOST_IP_ADDRESS}"
+
+  # Starts up a postgres database
+  postgres:
+    image: postgres
+    restart: always
+    volumes:
+      - pg_data_volume:/var/lib/postgresql/data
+    environment:
+        POSTGRES_PASSWORD: matrixreminderbot
