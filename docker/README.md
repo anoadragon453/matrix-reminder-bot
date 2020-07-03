@@ -40,7 +40,7 @@ differences:
   If using postgres, point to your postgres instance instead:
 
   ```
-  database: "postgres://username:password@postgres/matrix-reminder-bot?sslmode=disable
+  database: "postgres://username:password@postgres/matrix-reminder-bot?sslmode=disable"
   ```
 
 Change any other config values as necessary. For instance, you may also want to
