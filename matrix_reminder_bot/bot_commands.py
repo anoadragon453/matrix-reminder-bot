@@ -265,9 +265,7 @@ class Command(object):
         await self._confirm_reminder(reminder)
 
     def _get_readable_timedelta(
-            self, dt: datetime,
-            timezone: datetime.tzinfo,
-            delta: timedelta,
+        self, dt: datetime, timezone: datetime.tzinfo, delta: timedelta,
     ) -> str:
         """Returns a human-readable timedelta string, accounting for timezones"""
         # Offset the timedelta by the given timezone
