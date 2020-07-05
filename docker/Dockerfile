@@ -41,7 +41,7 @@ RUN apk add --no-cache \
     yaml-dev \
     python3-dev
 
-# Build libolm and place it at /libolm
+# Build libolm
 #
 # Also build the libolm python bindings and place them at /python-libs
 # We will later copy contents from both of these folders to the runtime
@@ -62,7 +62,7 @@ RUN mkdir -p /src/matrix_reminder_bot
 COPY matrix_reminder_bot/__init__.py /src/matrix_reminder_bot/
 COPY README.md matrix-reminder-bot /src/
 
-# Builds the dependencies
+# Build the dependencies
 COPY setup.py /src/setup.py
 RUN pip install --prefix="/python-libs" --no-warn-script-location "/src/.[postgres]"
 

@@ -95,6 +95,10 @@ If you would rather run from the checked out code, you can use:
 docker-compose up local-checkout
 ```
 
+This will build an optimized, production-ready container. If you are developing
+on matrix-reminder-bot and would like a development container for testing local
+changes, use the `start-dev.sh` script and consult [CONTRIBUTING.md](../CONTRIBUTING.md).
+
 **Note:** If you are trying to connect to a Synapse instance running on the
 host, you need to allow the IP address of the docker container to connect. This
 is controlled by `bind_addresses` in the `listeners` section of Synapse's

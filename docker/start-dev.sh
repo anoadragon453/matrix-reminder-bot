@@ -47,4 +47,4 @@ set HOST_IP_ADDRESS=127.0.0.1"
 fi
 
 # Build and run latest code
-docker-compose up --build local-checkout
+docker-compose up --build local-checkout-dev
