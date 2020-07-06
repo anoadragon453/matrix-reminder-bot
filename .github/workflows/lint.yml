@@ -24,11 +24,11 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install isort flake8 flake8-comprehensions black
+        pip install -U isort==5.0.4 flake8==3.8.3 flake8-comprehensions==3.2.3 black==19.10b0
 
     - name: Check import statement sorting
       run: |
-        isort -c -df -rc matrix_reminder_bot matrix-reminder-bot
+        isort -c --df matrix_reminder_bot matrix-reminder-bot
 
     - name: Python syntax errors, undefined names, etc.
       run: |

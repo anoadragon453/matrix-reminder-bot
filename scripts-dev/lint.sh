@@ -15,6 +15,6 @@ then
 fi
 
 echo "Linting these locations: $files"
-isort -y -rc $files
+isort $files
 flake8 $files
 python3 -m black $files
