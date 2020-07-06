@@ -28,5 +28,5 @@ make install
 cd python && make olm-python3
 
 # Install python3 bindings
-mkdir -p "$2"
+mkdir -p "$2" || true
 DESTDIR="$2" make install-python3
