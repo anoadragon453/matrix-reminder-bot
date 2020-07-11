@@ -101,7 +101,7 @@ class Reminder(object):
             message += " (This reminder has an alarm. It will go off in 5m)."
 
             # Check that an alarm is not already ongoing from a previous run
-            if not (self.room_id, self.reminder_text) in ALARMS:
+            if not (self.room_id, self.reminder_text.upper()) in ALARMS:
                 # Start alarming
                 self.alarm_job = SCHEDULER.add_job(
                     self._fire_alarm,
@@ -118,7 +118,7 @@ class Reminder(object):
 
         # If this was a one-time reminder, cancel and remove from the reminders dict
         if not self.recurse_timedelta and not self.cron_tab:
-            self.cancel()
+            self.cancel(cancel_alarm=not self.alarm)
 
     async def _fire_alarm(self):
         logger.debug("Alarm in room %s fired: %s", self.room_id, self.reminder_text)
@@ -130,7 +130,7 @@ class Reminder(object):
         # Send the message to the room
         await send_text_to_room(self.client, self.room_id, message, notice=False)
 
-    def cancel(self):
+    def cancel(self, cancel_alarm=True):
         """Cancels a reminder and all recurring instances"""
         logger.debug(
             "Cancelling reminder in room %s: %s", self.room_id, self.reminder_text
@@ -138,7 +138,8 @@ class Reminder(object):
 
         # Remove from the in-memory reminder and alarm dicts
         REMINDERS.pop((self.room_id, self.reminder_text.upper()), None)
-        ALARMS.pop((self.room_id, self.reminder_text.upper()), None)
+        if cancel_alarm:
+            ALARMS.pop((self.room_id, self.reminder_text.upper()), None)
 
         # Delete the reminder from the database
         self.store.delete_reminder(self.room_id, self.reminder_text)
@@ -146,7 +147,7 @@ class Reminder(object):
         # Delete any ongoing jobs
         if self.job and SCHEDULER.get_job(self.job.id):
             self.job.remove()
-        if self.alarm_job and SCHEDULER.get_job(self.alarm_job.id):
+        if cancel_alarm and self.alarm_job and SCHEDULER.get_job(self.alarm_job.id):
             self.alarm_job.remove()
 
 
