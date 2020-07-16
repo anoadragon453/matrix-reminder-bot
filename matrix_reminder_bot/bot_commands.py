@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Tuple
 
 import dateparser
@@ -110,8 +110,8 @@ class Command(object):
 
             # Generate a timedelta between now and the recurring time
             # `recurse_time` is guaranteed to always be in the future
-            # Round datetime.now() to the nearest second for better time display
-            current_time = datetime.now().replace(microsecond=0)
+            current_time = self._get_datetime_now(self.config.timezone)
+
             recurse_timedelta = recurse_time - current_time
             logger.debug("Recurring timedelta: %s", recurse_timedelta)
 
@@ -140,19 +140,37 @@ class Command(object):
         """
         time = dateparser.parse(
             time_str,
-            settings={"PREFER_DATES_FROM": "future", "TIMEZONE": self.config.timezone},
+            settings={
+                "PREFER_DATES_FROM": "future",
+                "TIMEZONE": self.config.timezone,
+                "RETURN_AS_TIMEZONE_AWARE": True,
+            },
         )
         if not time:
             raise CommandError(f"The given time '{time_str}' is invalid.")
 
         # Disallow times in the past
-        if time < datetime.now():
+        if time < self._get_datetime_now(self.config.timezone):
             raise CommandError(f"The given time '{time_str}' is in the past.")
 
         # Round datetime object to the nearest second for nicer display
         time = time.replace(microsecond=0)
 
         return time
+
+    def _get_datetime_now(self, tz: str) -> datetime:
+        """Returns a timezone-aware datetime object of the current time"""
+        # Get a datetime with no timezone information
+        no_timezone_datetime = datetime(2009, 9, 1)
+
+        # Create a datetime.timezone object with the correct offset from UTC
+        offset = timezone(pytz.timezone(tz).utcoffset(no_timezone_datetime))
+
+        # Get datetime.now with that offset
+        now = datetime.now(offset)
+
+        # Round to the nearest second for nicer display
+        return now.replace(microsecond=0)
 
     async def _confirm_reminder(self, reminder: Reminder):
         """Sends a message to the room confirming the reminder is set
@@ -183,13 +201,7 @@ class Command(object):
 
         if reminder.recurse_timedelta:
             # Inform the user how often their reminder will repeat
-            human_readable_recurse_timedelta = self._get_readable_timedelta(
-                reminder.start_time,
-                pytz.timezone(reminder.timezone),
-                reminder.recurse_timedelta,
-            )
-
-            text += f", and again every {human_readable_recurse_timedelta}"
+            text += f", and again every {readabledelta(reminder.recurse_timedelta)}"
 
         # Add some punctuation
         text += "!"
@@ -263,16 +275,6 @@ class Command(object):
 
         # Send a message to the room confirming the creation of the reminder
         await self._confirm_reminder(reminder)
-
-    def _get_readable_timedelta(
-        self, dt: datetime, timezone: datetime.tzinfo, delta: timedelta,
-    ) -> str:
-        """Returns a human-readable timedelta string, accounting for timezones"""
-        # Offset the timedelta by the given timezone
-        delta = delta - timezone.utcoffset(dt)
-
-        # Get the human-readable version
-        return readabledelta(delta)
 
     async def process(self):
         """Process the command"""
@@ -383,13 +385,7 @@ class Command(object):
             # Display a recurring time if available
             if reminder.recurse_timedelta:
                 # Get a nice, human-readable version to print
-                human_readable_recurse_timedelta = self._get_readable_timedelta(
-                    reminder.start_time,
-                    pytz.timezone(reminder.timezone),
-                    reminder.recurse_timedelta,
-                )
-
-                line += f" (every {human_readable_recurse_timedelta})"
+                line += f" (every {readabledelta(reminder.recurse_timedelta)})"
 
             # Note that an alarm exists if available
             if reminder.alarm:
