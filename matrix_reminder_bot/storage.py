@@ -261,23 +261,24 @@ class Storage(object):
             target_user = row[6]
             alarm = row[7]
 
-            # If this is a one-off reminder whose start time is in the past, then it will
-            # never fire. Ignore and delete the row from the db
-            if start_time and not recurse_timedelta and not cron_tab:
+            if start_time:
                 # Apply the timezone information for this reminder
                 start_time = start_time.replace(tzinfo=pytz.timezone(timezone))
-                now = datetime.now(tz=pytz.timezone(timezone))
 
-                if start_time < now:
-                    logger.debug(
-                        "Deleting missed reminder in room %s: %s - %s",
-                        room_id,
-                        reminder_text,
-                        start_time,
-                    )
+                # If this is a one-off reminder whose start time is in the past, then it will
+                # never fire. Ignore and delete the row from the db
+                if not recurse_timedelta and not cron_tab:
+                    now = datetime.now(tz=pytz.timezone(timezone))
+                    if start_time < now:
+                        logger.debug(
+                            "Deleting missed reminder in room %s: %s - %s",
+                            room_id,
+                            reminder_text,
+                            start_time,
+                        )
 
-                    self.delete_reminder(room_id, reminder_text)
-                    continue
+                        self.delete_reminder(room_id, reminder_text)
+                        continue
 
             # Create and record the reminder
             REMINDERS[(room_id, reminder_text.upper())] = Reminder(
