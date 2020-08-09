@@ -267,7 +267,7 @@ class Storage(object):
 
                 # If this is a one-off reminder whose start time is in the past, then it will
                 # never fire. Ignore and delete the row from the db
-                if ndnot recurse_timedelta and not cron_tab:
+                if not recurse_timedelta and not cron_tab:
                     now = datetime.now(tz=pytz.timezone(timezone))
                     if start_time < now:
                         logger.debug(
