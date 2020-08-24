@@ -101,7 +101,7 @@ class Reminder(object):
             message += " (This reminder has an alarm. It will go off in 5m)."
 
             # Check that an alarm is not already ongoing from a previous run
-            if not (self.room_id, self.reminder_text) in ALARMS:
+            if not (self.room_id, self.reminder_text.upper()) in ALARMS:
                 # Start alarming
                 self.alarm_job = SCHEDULER.add_job(
                     self._fire_alarm,
