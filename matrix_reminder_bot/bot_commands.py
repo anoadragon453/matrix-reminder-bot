@@ -4,6 +4,7 @@ from typing import Optional, Tuple
 
 import dateparser
 import pytz
+from apscheduler.job import Job
 from nio import AsyncClient, MatrixRoom
 from nio.events.room_events import RoomMessageText
 from readabledelta import readabledelta
@@ -324,33 +325,61 @@ class Command(object):
 
     async def _silence(self):
         """Silences an ongoing alarm"""
+        alarm_job = None
+
         # Attempt to find a reminder with an alarm currently going off
         reminder_text = " ".join(self.args)
-        alarm_job = ALARMS.get((self.room.room_id, reminder_text.upper()))
+        if reminder_text:
+            # Find the alarm job via its reminder text
+            alarm_job = ALARMS.get((self.room.room_id, reminder_text.upper()))
 
-        if alarm_job:
-            # We found a reminder with an alarm
-            ALARMS.pop((self.room.room_id, reminder_text.upper()), None)
-
-            if SCHEDULER.get_job(alarm_job.id):
-                # Silence the alarm
-                alarm_job.remove()
-
-            text = "Alarm silenced."
-        else:
-            # We didn't find an alarm that's currently firing...
-            # Be helpful and check if this is a known reminder without an alarm
-            # currently going off
-            reminder = REMINDERS.get((self.room.room_id, reminder_text.upper()))
-            if reminder:
-                text = (
-                    f"The reminder '{reminder_text}' does not currently have an "
-                    f"alarm going off."
-                )
+            if alarm_job:
+                await self._remove_and_silence_alarm(alarm_job, reminder_text)
+                text = f"Alarm '{reminder_text}' silenced."
             else:
-                text = f"Unknown alarm or reminder '{reminder_text}'."
+                # We didn't find an alarm with that reminder text
+                #
+                # Be helpful and check if this is a known reminder without an alarm
+                # currently going off
+                reminder = REMINDERS.get((self.room.room_id, reminder_text.upper()))
+                if reminder:
+                    text = (
+                        f"The reminder '{reminder_text}' does not currently have an "
+                        f"alarm going off."
+                    )
+                else:
+                    # Nope, can't find it
+                    text = f"Unknown alarm or reminder '{reminder_text}'."
+
+        else:
+            # No reminder text provided. Check if there's a reminder currently firing
+            # in the room instead then
+            for alarm_info, job in ALARMS.items():
+                if alarm_info[0] == self.room.room_id:
+                    # Found one!
+                    reminder_text = alarm_info[
+                        1
+                    ].capitalize()  # normalize the text a bit
+
+                    await self._remove_and_silence_alarm(job, reminder_text)
+                    text = f"Alarm '{reminder_text}' silenced."
+
+                    # Prevent the `else` clause from being triggered
+                    break
+            else:
+                # If we didn't find any alarms...
+                text = "No alarms are currently firing in this room."
 
         await send_text_to_room(self.client, self.room.room_id, text)
+
+    async def _remove_and_silence_alarm(self, alarm_job: Job, reminder_text: str):
+        # We found a reminder with an alarm. Remove it from the dict of current
+        # alarms
+        ALARMS.pop((self.room.room_id, reminder_text.upper()), None)
+
+        if SCHEDULER.get_job(alarm_job.id):
+            # Silence the alarm job
+            alarm_job.remove()
 
     async def _list_reminders(self):
         """Format and show known reminders for the current room
@@ -412,7 +441,7 @@ class Command(object):
 
         reminder = REMINDERS.get((self.room.room_id, reminder_text.upper()))
         if reminder:
-            # Cancel the reminder
+            # Cancel the reminder and associated alarms
             reminder.cancel()
 
             text = "Reminder cancelled."

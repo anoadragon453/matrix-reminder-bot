@@ -118,27 +118,32 @@ class Reminder(object):
 
         # If this was a one-time reminder, cancel and remove from the reminders dict
         if not self.recurse_timedelta and not self.cron_tab:
-            self.cancel()
+            # We set cancel_alarm to False here else the associated alarms wouldn't even
+            # fire
+            self.cancel(cancel_alarm=False)
 
     async def _fire_alarm(self):
         logger.debug("Alarm in room %s fired: %s", self.room_id, self.reminder_text)
 
         # Build the alarm message
         target = self.target_user if self.target_user else "@room"
-        message = f"Alarm: {target} {self.reminder_text} (Use `!silence` to silence)."
+        message = f"Alarm: {target} {self.reminder_text} (Use `!silence [reminder text]` to silence)."
 
         # Send the message to the room
         await send_text_to_room(self.client, self.room_id, message, notice=False)
 
-    def cancel(self):
-        """Cancels a reminder and all recurring instances"""
+    def cancel(self, cancel_alarm: bool = True):
+        """Cancels a reminder and all recurring instances
+
+        Args:
+            cancel_alarm: Whether to also cancel alarms of this reminder
+        """
         logger.debug(
             "Cancelling reminder in room %s: %s", self.room_id, self.reminder_text
         )
 
         # Remove from the in-memory reminder and alarm dicts
         REMINDERS.pop((self.room_id, self.reminder_text.upper()), None)
-        ALARMS.pop((self.room_id, self.reminder_text.upper()), None)
 
         # Delete the reminder from the database
         self.store.delete_reminder(self.room_id, self.reminder_text)
@@ -146,8 +151,13 @@ class Reminder(object):
         # Delete any ongoing jobs
         if self.job and SCHEDULER.get_job(self.job.id):
             self.job.remove()
-        if self.alarm_job and SCHEDULER.get_job(self.alarm_job.id):
-            self.alarm_job.remove()
+
+        # Cancel alarms of this reminder if required
+        if cancel_alarm:
+            ALARMS.pop((self.room_id, self.reminder_text.upper()), None)
+
+            if self.alarm_job and SCHEDULER.get_job(self.alarm_job.id):
+                self.alarm_job.remove()
 
 
 # Global dictionaries
