@@ -83,7 +83,7 @@ class Reminder(object):
             trigger = DateTrigger(run_date=start_time, timezone=timezone)
 
         # Note down the job for later manipulation
-        self.job = SCHEDULER.add_job(self._fire, trigger=trigger,)
+        self.job = SCHEDULER.add_job(self._fire, trigger=trigger)
 
         self.alarm_job = None
 
