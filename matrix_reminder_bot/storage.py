@@ -1,19 +1,21 @@
 import logging
 from datetime import datetime, timedelta
+from typing import Dict, Tuple
 
 import pytz
 from apscheduler.util import timedelta_seconds
+from nio import AsyncClient
 
 from matrix_reminder_bot.config import Config
 from matrix_reminder_bot.reminder import REMINDERS, Reminder
 
-latest_migration_version = 2
+latest_migration_version = 3
 
 logger = logging.getLogger(__name__)
 
 
 class Storage(object):
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, client: AsyncClient):
         """Setup the database
 
         Runs an initial setup or migrations depending on whether a database file has already
@@ -25,9 +27,12 @@ class Storage(object):
                     * type: A string, one of "sqlite" or "postgres"
                     * connection_string: A string, featuring a connection string that
                         be fed to each respective db library's `connect` method
+
+            client: The matrix client
         """
         # Check which type of database has been configured
         self.config = config
+        self.client = client
         self.conn = self._get_database_connection(
             config.database["type"], config.database["connection_string"]
         )
@@ -45,6 +50,9 @@ class Storage(object):
         finally:
             if migration_level < latest_migration_version:
                 self._run_db_migrations(migration_level)
+
+        # Load reminders from the db
+        REMINDERS.update(self._load_reminders())
 
         logger.info(f"Database initialization of type '{self.db_type}' complete")
 
@@ -224,14 +232,57 @@ class Storage(object):
 
             logger.info("Database migrated to v2")
 
-    def load_reminders(self, client):
+        if current_migration_version < 3:
+            logger.info("Migrating the database from v2 to v3...")
+
+            # Remove current timezone information from all start_time entries (as an older
+            # version of the code used to insert them)
+            self._execute(
+                """
+                SELECT text, room_id, start_time FROM reminder
+                    WHERE start_time LIKE '%+%'
+                    OR start_time LIKE '%-%'
+            """
+            )
+            rows = self.cursor.fetchall()
+            logger.debug("Loaded reminder rows with tz info: %s", rows)
+
+            # Update start_time rows in the db with their non-timezone versions
+            for row in rows:
+                text = row[0]
+                room_id = row[1]
+                start_time = datetime.fromisoformat(row[2])
+
+                # Remove timezone information from start_time
+                start_time = start_time.replace(tzinfo=None)
+
+                logger.debug(
+                    "Updating (%s, %s) with new start_time: %s",
+                    text,
+                    room_id,
+                    start_time,
+                )
+                self._execute(
+                    """
+                    UPDATE reminder SET start_time = ?
+                        WHERE text = ? AND room_id = ?
+                """,
+                    (start_time, text, room_id),
+                )
+
+            self._execute(
+                """
+                 UPDATE migration_version SET version = 3
+            """
+            )
+
+            logger.info("Database migrated to v3")
+
+    def _load_reminders(self) -> Dict[Tuple[str, str], Reminder]:
         """Load reminders from the database
 
-        Args:
-            client: The matrix client
-
         Returns:
-            A dictionary from tuple (room_id, reminder text) to Reminder object
+            A dictionary from (room_id, reminder text) to Reminder object
         """
         self._execute(
             """
@@ -249,6 +300,7 @@ class Storage(object):
         )
         rows = self.cursor.fetchall()
         logger.debug("Loaded reminder rows: %s", rows)
+        reminders = {}
 
         for row in rows:
             # Extract reminder data
@@ -282,8 +334,8 @@ class Storage(object):
                         continue
 
             # Create and record the reminder
-            REMINDERS[(room_id, reminder_text.upper())] = Reminder(
-                client=client,
+            reminders[(room_id, reminder_text.upper())] = Reminder(
+                client=self.client,
                 store=self,
                 reminder_text=reminder_text,
                 start_time=start_time,
@@ -295,6 +347,8 @@ class Storage(object):
                 alarm=alarm,
             )
 
+        return reminders
+
     def store_reminder(self, reminder: Reminder):
         """Store a new reminder in the database"""
         # timedelta.seconds does NOT give you the timedelta converted to seconds
@@ -303,6 +357,10 @@ class Storage(object):
             delta_seconds = int(timedelta_seconds(reminder.recurse_timedelta))
         else:
             delta_seconds = None
+
+        # Remove timezone from start_time. We only want to store the timezone str
+        # in the database
+        reminder.start_time = reminder.start_time.replace(tzinfo=None)
 
         self._execute(
             """

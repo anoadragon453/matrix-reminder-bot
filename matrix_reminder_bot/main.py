@@ -34,9 +34,6 @@ async def main():
         config_filepath = "config.yaml"
     config = Config(config_filepath)
 
-    # Configure the database
-    store = Storage(config)
-
     # Configure the python job scheduler
     SCHEDULER.configure({"apscheduler.timezone": config.timezone})
 
@@ -57,8 +54,8 @@ async def main():
         config=client_config,
     )
 
-    # Initialize reminders
-    store.load_reminders(client)
+    # Configure the database
+    store = Storage(config, client)
 
     # Set up event callbacks
     callbacks = Callbacks(client, store, config)
