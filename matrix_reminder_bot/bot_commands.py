@@ -425,7 +425,7 @@ class Command(object):
         """Show the help text"""
         if not self.args:
             text = (
-                "Hello, I am a reminder bot! Use `help commands` to view available "
+                "Hello, I am a reminder bot! Use `!help commands` to view available "
                 "commands."
             )
             await send_text_to_room(self.client, self.room.room_id, text)
