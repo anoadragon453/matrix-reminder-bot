@@ -454,14 +454,16 @@ class Command(object):
         """Show the help text"""
         if not self.args:
             text = (
-                "Hello, I am a reminder bot! Use `!help commands` to view available "
+                "Hello, I am a reminder bot! Use `!help reminders` to view available "
                 "commands."
             )
             await send_text_to_room(self.client, self.room.room_id, text)
             return
 
         topic = self.args[0]
-        if topic == "commands":
+
+        # Simply way to check for plurals
+        if topic.startswith("reminder"):
             text = """
 **Reminders**
 
@@ -533,5 +535,6 @@ This syntax is supported by any `!remind...` or `!alarm...` command above.
         await send_text_to_room(
             self.client,
             self.room.room_id,
-            f"Unknown command '{self.command}'. Try the 'help' command for more information.",
+            f"Unknown help topic '{self.command}'. Try the 'help' command for more "
+            f"information.",
         )
