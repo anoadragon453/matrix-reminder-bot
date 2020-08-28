@@ -39,13 +39,18 @@ class Callbacks(object):
         """
         # Extract the formatted message text, or the basic text if no formatting is available
         msg = event.formatted_body or event.body
+        if not msg:
+            return
 
         # Ignore messages from ourselves
         if event.sender == self.client.user:
             return
 
         # Check whether this is a command
-        if not msg.startswith(self.command_prefix):
+        #
+        # We use event.body here as formatted bodies can start with <p> instead of the
+        # command prefix
+        if not event.body.startswith(self.command_prefix):
             return
 
         logger.debug("Command received: %s", msg)
