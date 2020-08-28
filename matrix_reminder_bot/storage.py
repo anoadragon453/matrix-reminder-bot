@@ -358,9 +358,10 @@ class Storage(object):
         else:
             delta_seconds = None
 
-        # Remove timezone from start_time. We only want to store the timezone str
-        # in the database
-        reminder.start_time = reminder.start_time.replace(tzinfo=None)
+        if reminder.start_time:
+            # Remove timezone from start_time. We only want to store the timezone str
+            # in the database
+            reminder.start_time = reminder.start_time.replace(tzinfo=None)
 
         self._execute(
             """
