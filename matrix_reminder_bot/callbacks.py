@@ -52,6 +52,20 @@ class Callbacks(object):
         if not event.body.startswith(self.config.command_prefix):
             return
 
+        # It's possible to erraneous HTML tags to appear before the command prefix when
+        # making use of event.formatted_body. Typically <p> when commands include newlines
+        # This can cause the command code to break.
+        #
+        # We've already determined this is a command, so strip everything in the msg before
+        # the first instance of the command prefix as a workaround
+        prefix_index = msg.find(self.config.command_prefix)
+        if prefix_index != -1:
+            msg = msg[prefix_index:]
+        else:
+            # This formatted body doesn't contain the command prefix for some reason.
+            # Use event.body instead then
+            msg = event.body
+
         logger.debug("Command received: %s", msg)
 
         # Assume this is a command and attempt to process
