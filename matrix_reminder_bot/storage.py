@@ -394,7 +394,7 @@ class Storage(object):
         """Delete a reminder via its reminder text and the room it was sent in"""
         self._execute(
             """
-            DELETE FROM reminder WHERE room_id = ? AND UPPER(text) = ?
+            DELETE FROM reminder WHERE room_id = ? AND text = ?
         """,
-            (room_id, reminder_text.upper(),),
+            (room_id, reminder_text),
         )
