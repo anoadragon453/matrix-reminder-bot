@@ -467,23 +467,27 @@ class Command(object):
         """Show the help text"""
         if not self.args:
             text = (
-                "Hello, I am a reminder bot! Use `!help reminders` to view available "
-                "commands."
+                f"Hello, I am a reminder bot! Use `{self.config.command_prefix}help reminders` "
+                f"to view available commands."
             )
             await send_text_to_room(self.client, self.room.room_id, text)
             return
 
         topic = self.args[0]
 
+        # Ensure we don't tell the user to use something other than their configured command
+        # prefix
+        c = self.config.command_prefix
+
         # Simply way to check for plurals
         if topic.startswith("reminder"):
-            text = """
+            text = f"""
 **Reminders**
 
 Create an optionally recurring reminder that notifies the reminder creator:
 
 ```
-!remindme [every <recurring time>;] <start time>; <reminder text>
+{c}remindme [every <recurring time>;] <start time>; <reminder text>
 ```
 
 Create an optionally recurring reminder that notifies the whole room.
@@ -491,19 +495,19 @@ Create an optionally recurring reminder that notifies the whole room.
 the room):
 
 ```
-!remindroom [every <recurring time>;] <start time>; <reminder text>
+{c}remindroom [every <recurring time>;] <start time>; <reminder text>
 ```
 
 List all active reminders for a room:
 
 ```
-!listreminders
+{c}listreminders
 ```
 
 Cancel a reminder:
 
 ```
-!cancelreminder <reminder text>
+{c}cancelreminder <reminder text>
 ```
 
 **Alarms**
@@ -512,19 +516,19 @@ Create a reminder that will repeatedly sound every 5m after its usual
 fire time. Otherwise, the syntax is the same as a reminder:
 
 ```
-!alarmme [every <recurring time>;] <start time>; <reminder text>
+{c}alarmme [every <recurring time>;] <start time>; <reminder text>
 ```
 
 or for notifying the whole room:
 
 ```
-!alarmroom [every <recurring time>;] <start time>; <reminder text>
+{c}alarmroom [every <recurring time>;] <start time>; <reminder text>
 ```
 
 Once firing, an alarm can be silenced with:
 
 ```
-!silence [<reminder text>]
+{c}silence [<reminder text>]
 ```
 
 **Cron-tab Syntax**
@@ -533,10 +537,10 @@ If you need more complicated recurring reminders, you can make use of
 cron-tab syntax:
 
 ```
-!remindme cron <min> <hour> <day of month> <month> <day of week>; <reminder text>
+{c}remindme cron <min> <hour> <day of month> <month> <day of week>; <reminder text>
 ```
 
-This syntax is supported by any `!remind...` or `!alarm...` command above.
+This syntax is supported by any `{c}remind...` or `{c}alarm...` command above.
 """
         else:
             text = "Unknown help topic!"
