@@ -96,7 +96,7 @@ class Config(object):
         )
         self.homeserver_url = self._get_cfg(["matrix", "homeserver_url"], required=True)
 
-        self.command_prefix = self._get_cfg(["command_prefix"], default="!c")
+        self.command_prefix = self._get_cfg(["command_prefix"], default="!")
 
         # Reminder configuration
         self.timezone = self._get_cfg(["reminders", "timezone"], default="Etc/UTC")
