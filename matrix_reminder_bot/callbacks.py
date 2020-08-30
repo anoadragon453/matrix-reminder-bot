@@ -55,7 +55,7 @@ class Callbacks(object):
         logger.debug("Command received: %s", msg)
 
         # Assume this is a command and attempt to process
-        command = Command(self.client, self.store, self.config, msg, room, event,)
+        command = Command(self.client, self.store, self.config, msg, room, event)
 
         try:
             await command.process()
