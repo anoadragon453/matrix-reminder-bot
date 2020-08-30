@@ -10,7 +10,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.util import timedelta_seconds
 from nio import AsyncClient
 
-from matrix_reminder_bot.chat_functions import send_text_to_room
+from matrix_reminder_bot.functions import send_text_to_room
 
 logger = logging.getLogger(__name__)
 

@@ -9,9 +9,9 @@ from nio import AsyncClient, MatrixRoom
 from nio.events.room_events import RoomMessageText
 from readabledelta import readabledelta
 
-from matrix_reminder_bot.chat_functions import send_text_to_room
 from matrix_reminder_bot.config import Config
-from matrix_reminder_bot.errors import CommandError
+from matrix_reminder_bot.errors import CommandError, CommandSyntaxError
+from matrix_reminder_bot.functions import command_syntax, send_text_to_room
 from matrix_reminder_bot.reminder import ALARMS, REMINDERS, SCHEDULER, Reminder
 from matrix_reminder_bot.storage import Storage
 
@@ -89,7 +89,10 @@ class Command(object):
         args_str = " ".join(self.args)
         logger.debug("Parsing command arguments: %s", args_str)
 
-        time_str, reminder_text = args_str.split(";", maxsplit=1)
+        try:
+            time_str, reminder_text = args_str.split(";", maxsplit=1)
+        except ValueError:
+            raise CommandSyntaxError()
         logger.debug("Got time: %s", time_str)
 
         # Clean up the input
@@ -305,24 +308,29 @@ class Command(object):
         elif self.command == "help":
             await self._help()
 
+    @command_syntax("[every <recurring time>;] <start time>; <reminder text>")
     async def _remind_me(self):
         """Set a reminder that will remind only the user who created it"""
         await self._remind(target=self.event.sender)
 
+    @command_syntax("[every <recurring time>;] <start time>; <reminder text>")
     async def _remind_room(self):
         """Set a reminder that will mention the room that the reminder was created in"""
         await self._remind()
 
+    @command_syntax("[every <recurring time>;] <start time>; <reminder text>")
     async def _alarm_me(self):
         """Set a reminder with an alarm that will remind only the user who created it"""
         await self._remind(target=self.event.sender, alarm=True)
 
+    @command_syntax("[every <recurring time>;] <start time>; <reminder text>")
     async def _alarm_room(self):
         """Set a reminder with an alarm that when fired will mention the room that the
         reminder was created in
         """
         await self._remind(alarm=True)
 
+    @command_syntax("[<reminder text>]")
     async def _silence(self):
         """Silences an ongoing alarm"""
         alarm_job = None
@@ -381,6 +389,7 @@ class Command(object):
             # Silence the alarm job
             alarm_job.remove()
 
+    @command_syntax("")
     async def _list_reminders(self):
         """Format and show known reminders for the current room
 
@@ -430,9 +439,12 @@ class Command(object):
 
         await send_text_to_room(self.client, self.room.room_id, text)
 
+    @command_syntax("<reminder text>")
     async def _delete_reminder(self):
         """Delete a reminder via its reminder text"""
         reminder_text = " ".join(self.args)
+        if not reminder_text:
+            raise CommandSyntaxError()
 
         logger.debug("Known reminders: %s", REMINDERS)
         logger.debug(
@@ -450,6 +462,7 @@ class Command(object):
 
         await send_text_to_room(self.client, self.room.room_id, text)
 
+    @command_syntax("")
     async def _help(self):
         """Show the help text"""
         if not self.args:
@@ -511,7 +524,7 @@ or for notifying the whole room:
 Once firing, an alarm can be silenced with:
 
 ```
-!silence <reminder text>
+!silence [<reminder text>]
 ```
 
 **Cron-tab Syntax**

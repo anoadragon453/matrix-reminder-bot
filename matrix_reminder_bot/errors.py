@@ -6,7 +6,7 @@ class ConfigError(RuntimeError):
     """
 
     def __init__(self, msg: str):
-        super(ConfigError, self).__init__("%s" % (msg,))
+        super().__init__("%s" % (msg,))
 
 
 class CommandError(RuntimeError):
@@ -17,5 +17,12 @@ class CommandError(RuntimeError):
     """
 
     def __init__(self, msg: str):
-        super(CommandError, self).__init__("%s" % (msg,))
+        super().__init__("%s" % (msg,))
         self.msg = msg
+
+
+class CommandSyntaxError(RuntimeError):
+    """An error encountered if syntax of a called command was violated"""
+
+    def __init__(self):
+        super().__init__()

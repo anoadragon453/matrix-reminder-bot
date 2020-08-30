@@ -3,9 +3,9 @@ import logging
 from nio import AsyncClient, JoinError
 
 from matrix_reminder_bot.bot_commands import Command
-from matrix_reminder_bot.chat_functions import send_text_to_room
 from matrix_reminder_bot.config import Config
 from matrix_reminder_bot.errors import CommandError
+from matrix_reminder_bot.functions import send_text_to_room
 from matrix_reminder_bot.storage import Storage
 
 logger = logging.getLogger(__name__)

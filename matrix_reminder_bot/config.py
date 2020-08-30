@@ -13,6 +13,8 @@ logging.getLogger("peewee").setLevel(
     logging.INFO
 )  # Prevent debug messages from peewee lib
 
+COMMAND_PREFIX = "!"
+
 
 class Config(object):
     def __init__(self, filepath):
