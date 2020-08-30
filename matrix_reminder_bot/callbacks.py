@@ -26,7 +26,6 @@ class Callbacks(object):
         self.client = client
         self.store = store
         self.config = config
-        self.command_prefix = config.command_prefix
 
     async def message(self, room, event):
         """Callback for when a message event is received
@@ -50,7 +49,7 @@ class Callbacks(object):
         #
         # We use event.body here as formatted bodies can start with <p> instead of the
         # command prefix
-        if not event.body.startswith(self.command_prefix):
+        if not event.body.startswith(self.config.command_prefix):
             return
 
         logger.debug("Command received: %s", msg)

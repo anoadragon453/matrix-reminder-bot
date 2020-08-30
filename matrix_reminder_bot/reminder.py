@@ -98,7 +98,10 @@ class Reminder(object):
         # If this reminder has an alarm attached...
         if self.alarm:
             # Inform the user that an alarm will go off
-            message += " (This reminder has an alarm. It will go off in 5m)."
+            message += (
+                "\n\n(This reminder has an alarm. You will be reminded again in 5m. "
+                "Use the `silence` command to stop)."
+            )
 
             # Check that an alarm is not already ongoing from a previous run
             if not (self.room_id, self.reminder_text.upper()) in ALARMS:

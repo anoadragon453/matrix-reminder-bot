@@ -45,7 +45,7 @@ class Command(object):
         self.event = event
 
         msg_without_prefix = command[
-            len(config.command_prefix) :
+            len(self.config.command_prefix) :
         ]  # Remove the cmd prefix
         self.args = (
             msg_without_prefix.split()
@@ -209,6 +209,14 @@ class Command(object):
 
         # Add some punctuation
         text += "!"
+
+        if reminder.alarm:
+            # Inform the user that an alarm is attached to this reminder
+            text += (
+                f"\n\nWhen this reminder goes off, an alarm will sound every "
+                f"5 minutes until silenced. Alarms may be silenced using the "
+                f"`{self.config.command_prefix}silence` command."
+            )
 
         # Send the message to the room
         await send_text_to_room(self.client, self.room.room_id, text)
@@ -465,19 +473,19 @@ class Command(object):
     @command_syntax("")
     async def _help(self):
         """Show the help text"""
+        # Ensure we don't tell the user to use something other than their configured command
+        # prefix
+        c = self.config.command_prefix
+
         if not self.args:
             text = (
-                f"Hello, I am a reminder bot! Use `{self.config.command_prefix}help reminders` "
+                f"Hello, I am a reminder bot! Use `{c}help reminders` "
                 f"to view available commands."
             )
             await send_text_to_room(self.client, self.room.room_id, text)
             return
 
         topic = self.args[0]
-
-        # Ensure we don't tell the user to use something other than their configured command
-        # prefix
-        c = self.config.command_prefix
 
         # Simply way to check for plurals
         if topic.startswith("reminder"):
