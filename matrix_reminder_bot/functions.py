@@ -2,7 +2,7 @@ import logging
 from typing import Callable
 
 from markdown import markdown
-from nio import SendRetryError
+from nio import AsyncClient, SendRetryError
 
 from matrix_reminder_bot.errors import CommandSyntaxError
 
@@ -10,21 +10,25 @@ logger = logging.getLogger(__name__)
 
 
 async def send_text_to_room(
-    client, room_id, message, notice=True, markdown_convert=True
+    client: AsyncClient,
+    room_id: str,
+    message: str,
+    notice: bool = True,
+    markdown_convert: bool = True,
 ):
     """Send text to a matrix room
 
     Args:
-        client (nio.AsyncClient): The client to communicate to matrix with
+        client: The client to communicate to matrix with
 
-        room_id (str): The ID of the room to send the message to
+        room_id: The ID of the room to send the message to
 
-        message (str): The message content
+        message: The message content
 
-        notice (bool): Whether the message should be sent with an "m.notice" message type
+        notice: Whether the message should be sent with an "m.notice" message type
             (will not ping users)
 
-        markdown_convert (bool): Whether to convert the message content to markdown.
+        markdown_convert: Whether to convert the message content to markdown.
             Defaults to true.
     """
     # Determine whether to ping room members or not

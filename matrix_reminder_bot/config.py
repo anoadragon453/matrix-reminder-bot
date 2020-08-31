@@ -15,10 +15,10 @@ logging.getLogger("peewee").setLevel(
 
 
 class Config(object):
-    def __init__(self, filepath):
+    def __init__(self, filepath: str):
         """
         Args:
-            filepath (str): Path to config file
+            filepath: Path to the config file
         """
         if not os.path.isfile(filepath):
             raise ConfigError(f"Config file '{filepath}' does not exist")

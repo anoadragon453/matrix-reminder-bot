@@ -1,6 +1,13 @@
 import logging
 
-from nio import AsyncClient, JoinError
+from nio import (
+    AsyncClient,
+    InviteMemberEvent,
+    JoinError,
+    MatrixRoom,
+    MegolmEvent,
+    RoomMessageText,
+)
 
 from matrix_reminder_bot.bot_commands import Command
 from matrix_reminder_bot.config import Config
@@ -27,15 +34,8 @@ class Callbacks(object):
         self.store = store
         self.config = config
 
-    async def message(self, room, event):
-        """Callback for when a message event is received
-
-        Args:
-            room (nio.rooms.MatrixRoom): The room the event came from
-
-            event (nio.events.room_events.RoomMessageText): The event defining the message
-
-        """
+    async def message(self, room: MatrixRoom, event: RoomMessageText):
+        """Callback for when a message event is received"""
         # Extract the formatted message text, or the basic text if no formatting is available
         msg = event.formatted_body or event.body
         if not msg:
@@ -88,7 +88,7 @@ class Callbacks(object):
             # Print traceback
             logger.exception("Unknown error while processing command:")
 
-    async def invite(self, room, event):
+    async def invite(self, room: MatrixRoom, event: InviteMemberEvent):
         """Callback for when an invite is received. Join the room specified in the invite"""
         logger.debug(f"Got invite to {room.room_id} from {event.sender}.")
 
@@ -105,7 +105,7 @@ class Callbacks(object):
                 logger.info(f"Joined {room.room_id}")
                 break
 
-    async def decryption_failure(self, room, event):
+    async def decryption_failure(self, room: MatrixRoom, event: MegolmEvent):
         """Callback for when an event fails to decrypt. Inform the user"""
         logger.error(
             f"Failed to decrypt event '{event.event_id}' in room '{room.room_id}'!"
