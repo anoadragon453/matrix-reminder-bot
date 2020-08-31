@@ -104,3 +104,17 @@ class Callbacks(object):
             else:
                 logger.info(f"Joined {room.room_id}")
                 break
+
+    async def decryption_failure(self, room, event):
+        """Callback for when an event fails to decrypt. Inform the user"""
+        logger.error(
+            f"Failed to decrypt event '{event.event_id}' in room '{room.room_id}'!"
+            f"\n\n"
+            f"Tip: try using a different device ID in your config file and restart."
+            f"\n\n"
+            f"If all else fails, delete your store directory and let the bot recreate "
+            f"it (your reminders will NOT be deleted, but the bot may respond to existing "
+            f"commands a second time)."
+        )
+
+        await send_text_to_room(self.client, room.room_id, "Unable to decrypt message.")

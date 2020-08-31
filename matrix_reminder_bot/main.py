@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import asyncio
 import logging
 import sys
@@ -13,6 +12,7 @@ from nio import (
     InviteMemberEvent,
     LocalProtocolError,
     LoginError,
+    MegolmEvent,
     RoomMessageText,
 )
 
@@ -61,6 +61,7 @@ async def main():
     callbacks = Callbacks(client, store, config)
     client.add_event_callback(callbacks.message, (RoomMessageText,))
     client.add_event_callback(callbacks.invite, (InviteMemberEvent,))
+    client.add_event_callback(callbacks.decryption_failure, (MegolmEvent,))
 
     # Keep trying to reconnect on failure (with some time in-between)
     while True:
