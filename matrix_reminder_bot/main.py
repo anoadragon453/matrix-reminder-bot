@@ -92,11 +92,6 @@ async def main():
 
             # Login succeeded!
 
-            # Sync encryption keys with the server
-            # Required for participating in encrypted rooms
-            if client.should_upload_keys:
-                await client.keys_upload()
-
             logger.info(f"Logged in as {config.user_id}")
             logger.info("Startup complete")
 
