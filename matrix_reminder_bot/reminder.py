@@ -10,6 +10,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.util import timedelta_seconds
 from nio import AsyncClient
 
+from matrix_reminder_bot.config import CONFIG
 from matrix_reminder_bot.functions import send_text_to_room
 
 logger = logging.getLogger(__name__)
@@ -99,8 +100,8 @@ class Reminder(object):
         if self.alarm:
             # Inform the user that an alarm will go off
             message += (
-                "\n\n(This reminder has an alarm. You will be reminded again in 5m. "
-                "Use the `silence` command to stop)."
+                f"\n\n(This reminder has an alarm. You will be reminded again in 5m. "
+                f"Use the `{CONFIG.command_prefix}silence` command to stop)."
             )
 
             # Check that an alarm is not already ongoing from a previous run
@@ -130,7 +131,10 @@ class Reminder(object):
 
         # Build the alarm message
         target = self.target_user if self.target_user else "@room"
-        message = f"Alarm: {target} {self.reminder_text} (Use `!silence [reminder text]` to silence)."
+        message = (
+            f"Alarm: {target} {self.reminder_text} "
+            f"(Use `{CONFIG.command_prefix}silence [reminder text]` to silence)."
+        )
 
         # Send the message to the room
         await send_text_to_room(self.client, self.room_id, message, notice=False)

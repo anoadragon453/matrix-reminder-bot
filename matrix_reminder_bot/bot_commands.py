@@ -9,7 +9,7 @@ from nio import AsyncClient, MatrixRoom
 from nio.events.room_events import RoomMessageText
 from readabledelta import readabledelta
 
-from matrix_reminder_bot.config import Config
+from matrix_reminder_bot.config import CONFIG
 from matrix_reminder_bot.errors import CommandError, CommandSyntaxError
 from matrix_reminder_bot.functions import command_syntax, send_text_to_room
 from matrix_reminder_bot.reminder import ALARMS, REMINDERS, SCHEDULER, Reminder
@@ -23,7 +23,6 @@ class Command(object):
         self,
         client: AsyncClient,
         store: Storage,
-        config: Config,
         command: str,
         room: MatrixRoom,
         event: RoomMessageText,
@@ -33,19 +32,17 @@ class Command(object):
         Args:
             client: The client to communicate to matrix with
             store: Bot storage
-            config: Bot configuration parameters
             command: The command and arguments
             room: The room the command was sent in
             event: The event describing the command
         """
         self.client = client
         self.store = store
-        self.config = config
         self.room = room
         self.event = event
 
         msg_without_prefix = command[
-            len(self.config.command_prefix) :
+            len(CONFIG.command_prefix) :
         ]  # Remove the cmd prefix
         self.args = (
             msg_without_prefix.split()
@@ -114,7 +111,7 @@ class Command(object):
 
             # Generate a timedelta between now and the recurring time
             # `recurse_time` is guaranteed to always be in the future
-            current_time = self._get_datetime_now(self.config.timezone)
+            current_time = self._get_datetime_now(CONFIG.timezone)
 
             recurse_timedelta = recurse_time - current_time
             logger.debug("Recurring timedelta: %s", recurse_timedelta)
@@ -146,7 +143,7 @@ class Command(object):
             time_str,
             settings={
                 "PREFER_DATES_FROM": "future",
-                "TIMEZONE": self.config.timezone,
+                "TIMEZONE": CONFIG.timezone,
                 "RETURN_AS_TIMEZONE_AWARE": True,
             },
         )
@@ -154,7 +151,7 @@ class Command(object):
             raise CommandError(f"The given time '{time_str}' is invalid.")
 
         # Disallow times in the past
-        if time < self._get_datetime_now(self.config.timezone):
+        if time < self._get_datetime_now(CONFIG.timezone):
             raise CommandError(f"The given time '{time_str}' is in the past.")
 
         # Round datetime object to the nearest second for nicer display
@@ -215,7 +212,7 @@ class Command(object):
             text += (
                 f"\n\nWhen this reminder goes off, an alarm will sound every "
                 f"5 minutes until silenced. Alarms may be silenced using the "
-                f"`{self.config.command_prefix}silence` command."
+                f"`{CONFIG.command_prefix}silence` command."
             )
 
         # Send the message to the room
@@ -274,7 +271,7 @@ class Command(object):
             self.room.room_id,
             reminder_text,
             start_time=start_time,
-            timezone=self.config.timezone,
+            timezone=CONFIG.timezone,
             cron_tab=cron_tab,
             recurse_timedelta=recurse_timedelta,
             target_user=target,
@@ -475,7 +472,7 @@ class Command(object):
         """Show the help text"""
         # Ensure we don't tell the user to use something other than their configured command
         # prefix
-        c = self.config.command_prefix
+        c = CONFIG.command_prefix
 
         if not self.args:
             text = (

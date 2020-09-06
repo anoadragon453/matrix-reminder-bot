@@ -4,6 +4,7 @@ from typing import Callable
 from markdown import markdown
 from nio import AsyncClient, SendRetryError
 
+from matrix_reminder_bot.config import CONFIG
 from matrix_reminder_bot.errors import CommandSyntaxError
 
 logger = logging.getLogger(__name__)
@@ -79,7 +80,7 @@ def command_syntax(syntax: str):
                 # command's name from the `self` object passed to the command
                 text = (
                     f"Invalid syntax. Please use "
-                    f"`{self.config.command_prefix}{self.command} {syntax}`."
+                    f"`{CONFIG.command_prefix}{self.command} {syntax}`."
                 )
                 await send_text_to_room(self.client, self.room.room_id, text)
 

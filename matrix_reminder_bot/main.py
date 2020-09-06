@@ -17,7 +17,7 @@ from nio import (
 )
 
 from matrix_reminder_bot.callbacks import Callbacks
-from matrix_reminder_bot.config import Config
+from matrix_reminder_bot.config import CONFIG
 from matrix_reminder_bot.reminder import SCHEDULER
 from matrix_reminder_bot.storage import Storage
 
@@ -26,16 +26,15 @@ logger = logging.getLogger(__name__)
 
 async def main():
     # Read config file
-
     # A different config file path can be specified as the first command line arg
     if len(sys.argv) > 1:
         config_filepath = sys.argv[1]
     else:
         config_filepath = "config.yaml"
-    config = Config(config_filepath)
+    CONFIG.read_config(config_filepath)
 
     # Configure the python job scheduler
-    SCHEDULER.configure({"apscheduler.timezone": config.timezone})
+    SCHEDULER.configure({"apscheduler.timezone": CONFIG.timezone})
 
     # Configuration options for the AsyncClient
     client_config = AsyncClientConfig(
@@ -47,18 +46,18 @@ async def main():
 
     # Initialize the matrix client
     client = AsyncClient(
-        config.homeserver_url,
-        config.user_id,
-        device_id=config.device_id,
-        store_path=config.store_path,
+        CONFIG.homeserver_url,
+        CONFIG.user_id,
+        device_id=CONFIG.device_id,
+        store_path=CONFIG.store_path,
         config=client_config,
     )
 
     # Configure the database
-    store = Storage(config, client)
+    store = Storage(client)
 
     # Set up event callbacks
-    callbacks = Callbacks(client, store, config)
+    callbacks = Callbacks(client, store)
     client.add_event_callback(callbacks.message, (RoomMessageText,))
     client.add_event_callback(callbacks.invite, (InviteMemberEvent,))
     client.add_event_callback(callbacks.decryption_failure, (MegolmEvent,))
@@ -69,7 +68,7 @@ async def main():
             # Try to login with the configured username/password
             try:
                 login_response = await client.login(
-                    password=config.user_password, device_name=config.device_name,
+                    password=CONFIG.user_password, device_name=CONFIG.device_name,
                 )
 
                 # Check if login failed. Usually incorrect password
@@ -93,7 +92,7 @@ async def main():
 
             # Login succeeded!
 
-            logger.info(f"Logged in as {config.user_id}")
+            logger.info(f"Logged in as {CONFIG.user_id}")
             logger.info("Startup complete")
 
             # Allow jobs to fire

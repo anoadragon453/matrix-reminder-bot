@@ -10,7 +10,7 @@ from nio import (
 )
 
 from matrix_reminder_bot.bot_commands import Command
-from matrix_reminder_bot.config import Config
+from matrix_reminder_bot.config import CONFIG
 from matrix_reminder_bot.errors import CommandError
 from matrix_reminder_bot.functions import send_text_to_room
 from matrix_reminder_bot.storage import Storage
@@ -24,15 +24,11 @@ class Callbacks(object):
     Args:
         client: nio client used to interact with matrix
         store: Bot storage
-        config: Bot configuration parameters
     """
 
-    def __init__(
-        self, client: AsyncClient, store: Storage, config: Config,
-    ):
+    def __init__(self, client: AsyncClient, store: Storage):
         self.client = client
         self.store = store
-        self.config = config
 
     async def message(self, room: MatrixRoom, event: RoomMessageText):
         """Callback for when a message event is received"""
@@ -49,7 +45,7 @@ class Callbacks(object):
         #
         # We use event.body here as formatted bodies can start with <p> instead of the
         # command prefix
-        if not event.body.startswith(self.config.command_prefix):
+        if not event.body.startswith(CONFIG.command_prefix):
             return
 
         # It's possible to erraneous HTML tags to appear before the command prefix when
@@ -58,7 +54,7 @@ class Callbacks(object):
         #
         # We've already determined this is a command, so strip everything in the msg before
         # the first instance of the command prefix as a workaround
-        prefix_index = msg.find(self.config.command_prefix)
+        prefix_index = msg.find(CONFIG.command_prefix)
         if prefix_index != -1:
             msg = msg[prefix_index:]
         else:
@@ -69,7 +65,7 @@ class Callbacks(object):
         logger.debug("Command received: %s", msg)
 
         # Assume this is a command and attempt to process
-        command = Command(self.client, self.store, self.config, msg, room, event)
+        command = Command(self.client, self.store, msg, room, event)
 
         try:
             await command.process()

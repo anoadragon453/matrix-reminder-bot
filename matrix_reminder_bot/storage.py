@@ -6,7 +6,7 @@ import pytz
 from apscheduler.util import timedelta_seconds
 from nio import AsyncClient
 
-from matrix_reminder_bot.config import Config
+from matrix_reminder_bot.config import CONFIG
 from matrix_reminder_bot.reminder import REMINDERS, Reminder
 
 latest_migration_version = 3
@@ -15,29 +15,22 @@ logger = logging.getLogger(__name__)
 
 
 class Storage(object):
-    def __init__(self, config: Config, client: AsyncClient):
+    def __init__(self, client: AsyncClient):
         """Setup the database
 
         Runs an initial setup or migrations depending on whether a database file has already
         been created
 
         Args:
-            config: The bot config. config.database must be a dictionary containing
-                the following keys:
-                    * type: A string, one of "sqlite" or "postgres"
-                    * connection_string: A string, featuring a connection string that
-                        be fed to each respective db library's `connect` method
-
             client: The matrix client
         """
         # Check which type of database has been configured
-        self.config = config
         self.client = client
         self.conn = self._get_database_connection(
-            config.database["type"], config.database["connection_string"]
+            CONFIG.database.type, CONFIG.database.connection_string
         )
         self.cursor = self.conn.cursor()
-        self.db_type = config.database["type"]
+        self.db_type = CONFIG.database.type
 
         # Try to check the current migration version
         migration_level = 0
@@ -221,7 +214,7 @@ class Storage(object):
                 """
                 UPDATE reminder SET timezone = ?
             """,
-                (self.config.timezone,),
+                (CONFIG.timezone,),
             )
 
             self._execute(

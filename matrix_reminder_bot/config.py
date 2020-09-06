@@ -14,12 +14,35 @@ logging.getLogger("peewee").setLevel(
 )  # Prevent debug messages from peewee lib
 
 
-class Config(object):
-    def __init__(self, filepath: str):
+class DatabaseConfig:
+    def __init__(self):
+        # The type of database. Supported types are 'sqlite' and 'postgres'
+        self.type: str = ""
+        self.connection_string: str = ""
+
+
+class Config:
+    def __init__(self):
         """
         Args:
             filepath: Path to the config file
         """
+        # TODO: Add some comments for each of these
+        # TODO: Also ensure that this commit diff is sane. Did I replace config everywhere?
+        self.database: DatabaseConfig = DatabaseConfig()
+        self.store_path: str = ""
+
+        self.user_id: str = ""
+        self.user_password: str = ""
+        self.device_id: str = ""
+        self.device_name: str = ""
+        self.homeserver_url: str = ""
+
+        self.command_prefix: str = ""
+
+        self.timezone: str = ""
+
+    def read_config(self, filepath: str):
         if not os.path.isfile(filepath):
             raise ConfigError(f"Config file '{filepath}' does not exist")
 
@@ -62,12 +85,11 @@ class Config(object):
         sqlite_scheme = "sqlite://"
         postgres_scheme = "postgres://"
         if database_path.startswith(sqlite_scheme):
-            self.database = {
-                "type": "sqlite",
-                "connection_string": database_path[len(sqlite_scheme) :],
-            }
+            self.database.type = "sqlite"
+            self.database.connection_string = database_path[len(sqlite_scheme) :]
         elif database_path.startswith(postgres_scheme):
-            self.database = {"type": "postgres", "connection_string": database_path}
+            self.database.type = "postgres"
+            self.database.connection_string = database_path
         else:
             raise ConfigError("Invalid connection string for storage.database")
 
@@ -83,9 +105,10 @@ class Config(object):
                 )
 
         # Matrix bot account setup
-        self.user_id = self._get_cfg(["matrix", "user_id"], required=True)
-        if not re.match("@.*:.*", self.user_id):
+        user_id = self._get_cfg(["matrix", "user_id"], required=True)
+        if not re.match("@.*:.*", user_id):
             raise ConfigError("matrix.user_id must be in the form @name:domain")
+        self.user_id = user_id
 
         self.user_password = self._get_cfg(["matrix", "user_password"], required=True)
         self.device_id = self._get_cfg(["matrix", "device_id"], required=True)
@@ -125,3 +148,6 @@ class Config(object):
 
         # We found the option. Return it
         return config
+
+
+CONFIG: Config = Config()
