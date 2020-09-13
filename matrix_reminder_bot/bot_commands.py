@@ -548,7 +548,8 @@ cron-tab syntax:
 This syntax is supported by any `{c}remind...` or `{c}alarm...` command above.
 """
         else:
-            text = "Unknown help topic!"
+            # Unknown help topic
+            return
 
         await send_text_to_room(self.client, self.room.room_id, text)
 
