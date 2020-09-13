@@ -113,9 +113,11 @@ class Callbacks(object):
             f"commands a second time)."
         )
 
+        user_msg = (
+            "Unable to decrypt this message. "
+            "Check whether you've chosen to only encrypt to trusted devices."
+        )
+
         await send_text_to_room(
-            self.client,
-            room.room_id,
-            "Unable to decrypt message.",
-            reply_to_event_id=event.event_id,
+            self.client, room.room_id, user_msg, reply_to_event_id=event.event_id,
         )
