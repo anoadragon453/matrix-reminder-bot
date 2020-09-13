@@ -113,4 +113,9 @@ class Callbacks(object):
             f"commands a second time)."
         )
 
-        await send_text_to_room(self.client, room.room_id, "Unable to decrypt message.")
+        await send_text_to_room(
+            self.client,
+            room.room_id,
+            "Unable to decrypt message.",
+            reply_to_event_id=event.event_id,
+        )
