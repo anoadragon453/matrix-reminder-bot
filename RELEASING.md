@@ -44,7 +44,7 @@ The following is a guide on the steps necessary to creating a release of `matrix
 
 	The commit message should just be the changelog entry, with `X.Y.Z` as the title.
 
-1. Upload the release the PyPI:
+1. Upload the release to PyPI:
 
 	```sh
 	python3 setup.py sdist bdist_wheel
