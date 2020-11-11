@@ -1,4 +1,5 @@
 import logging
+import pytz
 from datetime import datetime, timedelta
 from typing import Dict, Optional, Tuple
 
@@ -72,12 +73,22 @@ class Reminder(object):
             trigger = CronTrigger.from_crontab(cron_tab, timezone=timezone)
         elif recurse_timedelta:
             # Use an interval trigger (runs multiple times)
+
+            # If the start_time of this reminder was in daylight savings for this timezone,
+            # and we are no longer in daylight savings, alter the start_time by the
+            # appropriate offset.
+            # TODO: Ideally this would be done dynamically instead of on reminder construction
+            tz = pytz.timezone(timezone)
+            start_time = tz.localize(start_time)
+            now = tz.localize(datetime.now())
+            if start_time.dst() != now.dst():
+                start_time += start_time.dst()
+
             trigger = IntervalTrigger(
                 # timedelta.seconds does NOT give you the timedelta converted to seconds
                 # Use a method from apscheduler instead
                 seconds=int(timedelta_seconds(recurse_timedelta)),
                 start_date=start_time,
-                timezone=timezone,
             )
         else:
             # Use a date trigger (runs only once)
