@@ -79,7 +79,7 @@ class Reminder(object):
             # appropriate offset.
             # TODO: Ideally this would be done dynamically instead of on reminder construction
             tz = pytz.timezone(timezone)
-            start_time = tz.localize(start_time)
+            start_time = start_time.astimezone(tz)
             now = tz.localize(datetime.now())
             if start_time.dst() != now.dst():
                 start_time += start_time.dst()
