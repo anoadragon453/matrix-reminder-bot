@@ -68,7 +68,8 @@ async def main():
             # Try to login with the configured username/password
             try:
                 login_response = await client.login(
-                    password=CONFIG.user_password, device_name=CONFIG.device_name,
+                    password=CONFIG.user_password,
+                    device_name=CONFIG.device_name,
                 )
 
                 # Check if login failed. Usually incorrect password

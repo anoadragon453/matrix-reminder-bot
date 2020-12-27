@@ -123,7 +123,10 @@ class Config:
         self.timezone = self._get_cfg(["reminders", "timezone"], default="Etc/UTC")
 
     def _get_cfg(
-        self, path: List[str], default: Any = None, required: bool = True,
+        self,
+        path: List[str],
+        default: Any = None,
+        required: bool = True,
     ) -> Any:
         """Get a config option from a path and option name, specifying whether it is
         required.

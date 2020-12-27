@@ -119,5 +119,8 @@ class Callbacks(object):
         )
 
         await send_text_to_room(
-            self.client, room.room_id, user_msg, reply_to_event_id=event.event_id,
+            self.client,
+            room.room_id,
+            user_msg,
+            reply_to_event_id=event.event_id,
         )
