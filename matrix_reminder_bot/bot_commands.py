@@ -290,7 +290,7 @@ class Command(object):
 
     async def process(self):
         """Process the command"""
-        if self.command == "remindme":
+        if self.command in ["remindme", "remind", "r"]:
             await self._remind_me()
         elif self.command == "remindroom":
             await self._remind_room()
@@ -495,7 +495,7 @@ class Command(object):
 Create an optionally recurring reminder that notifies the reminder creator:
 
 ```
-{c}remindme [every <recurring time>;] <start time>; <reminder text>
+{c}remindme|remind|r [every <recurring time>;] <start time>; <reminder text>
 ```
 
 Create an optionally recurring reminder that notifies the whole room.
