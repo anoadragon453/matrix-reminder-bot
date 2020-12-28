@@ -2,11 +2,16 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Tuple
 
+import arrow
 import dateparser
 import pytz
 from apscheduler.job import Job
+from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.date import DateTrigger
+from apscheduler.triggers.interval import IntervalTrigger
 from nio import AsyncClient, MatrixRoom
 from nio.events.room_events import RoomMessageText
+from pretty_cron import prettify_cron
 from readabledelta import readabledelta
 
 from matrix_reminder_bot.config import CONFIG
@@ -411,41 +416,82 @@ class Command(object):
 
             There are no reminders for this room.
         """
-        reminders = []
+        output = ""
+
+        cron_reminder_lines = []
+        one_shot_reminder_lines = []
+        interval_reminder_lines = []
+
+        # Sort the reminder types
         for reminder in REMINDERS.values():
             # Filter out reminders that don't belong to this room
             if reminder.room_id != self.room.room_id:
                 continue
 
-            # If this is a cron-style reminder, just print the cron tab
-            if reminder.cron_tab:
-                line = f"`{reminder.cron_tab}`: {reminder.reminder_text}"
-                reminders.append(line)
-                continue
-
-            # Format the start time into something readable
-            human_readable_start_time = reminder.start_time.strftime("%b %d %Y, %H:%M")
-
-            line = f"{human_readable_start_time}: {reminder.reminder_text}"
-
-            # Display a recurring time if available
-            if reminder.recurse_timedelta:
-                # Get a nice, human-readable version to print
-                line += f" (every {readabledelta(reminder.recurse_timedelta)})"
-
-            # Note that an alarm exists if available
+            # Organise alarms into markdown lists
             if reminder.alarm:
-                line += " (has alarm)"
+                # Note that an alarm exists if available
+                alarm_clock_emoji = "⏰"
+                line = f"- {alarm_clock_emoji} "
+            else:
+                line = "- "
 
-            reminders.append(line)
+            # Print the duration before (next) execution
+            next_execution = reminder.job.next_run_time
+            next_execution = arrow.get(next_execution)
 
-        if reminders:
-            text = "Reminders for this room:\n\n"
-            text += "\n\n".join(reminders)
-        else:
-            text = "There are no reminders for this room."
+            # Cron-based reminders
+            if isinstance(reminder.job.trigger, CronTrigger):
+                # A human-readable cron tab, in addition to the actual tab
+                line += f"{prettify_cron(reminder.cron_tab)} (`{reminder.cron_tab}`); next run {next_execution.humanize()}"
 
-        await send_text_to_room(self.client, self.room.room_id, text)
+            # One-time reminders
+            elif isinstance(reminder.job.trigger, DateTrigger):
+                # Just print when the reminder will go off
+                line += f"{next_execution.humanize()}"
+
+            # Repeat reminders
+            elif isinstance(reminder.job.trigger, IntervalTrigger):
+                # Print the interval, and when it will next go off
+                line += f"every {readabledelta(reminder.recurse_timedelta)}; next run {next_execution.humanize()}"
+
+            # Add the reminder's text
+            line += f'; *"{reminder.reminder_text}"*'
+
+            # Output the status of each reminder. We divide up the reminders by type in order
+            # to show them in separate sections, and display them differently
+            if isinstance(reminder.job.trigger, CronTrigger):
+                cron_reminder_lines.append(line)
+            elif isinstance(reminder.job.trigger, DateTrigger):
+                one_shot_reminder_lines.append(line)
+            elif isinstance(reminder.job.trigger, IntervalTrigger):
+                interval_reminder_lines.append(line)
+
+        if (
+            not one_shot_reminder_lines
+            or not cron_reminder_lines
+            or not interval_reminder_lines
+        ):
+            await send_text_to_room(
+                self.client,
+                self.room.room_id,
+                "*There are no reminders for this room.*",
+            )
+            return
+
+        if one_shot_reminder_lines:
+            output += "\n\n" + "**1️⃣ One-time Reminders**" + "\n\n"
+            output += "\n".join(one_shot_reminder_lines)
+
+        if cron_reminder_lines:
+            output += "\n\n" + "**📅 Cron Reminders**" + "\n\n"
+            output += "\n".join(cron_reminder_lines)
+
+        if interval_reminder_lines:
+            output += "\n\n" + "**🔁 Repeating Reminders**" + "\n\n"
+            output += "\n".join(interval_reminder_lines)
+
+        await send_text_to_room(self.client, self.room.room_id, output)
 
     @command_syntax("<reminder text>")
     async def _delete_reminder(self):
