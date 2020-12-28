@@ -12,7 +12,7 @@ from apscheduler.util import timedelta_seconds
 from nio import AsyncClient
 
 from matrix_reminder_bot.config import CONFIG
-from matrix_reminder_bot.functions import send_text_to_room
+from matrix_reminder_bot.functions import make_pill, send_text_to_room
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +105,7 @@ class Reminder(object):
 
         # Build the reminder message
         target = self.target_user if self.target_user else "@room"
-        message = f"{target} {self.reminder_text}"
+        message = f"{make_pill(target)} {self.reminder_text}"
 
         # If this reminder has an alarm attached...
         if self.alarm:

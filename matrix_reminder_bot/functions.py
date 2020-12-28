@@ -97,3 +97,21 @@ def command_syntax(syntax: str):
         return inner
 
     return outer
+
+
+def make_pill(user_id: str, displayname: str = None) -> str:
+    """Convert a user ID (and optionally a display name) to a formatted user 'pill'
+
+    Args:
+        user_id: The MXID of the user.
+        displayname: An optional displayname. Clients like Element will figure out the
+            correct display name no matter what, but other clients may not.
+
+    Returns:
+        The formatted user pill.
+    """
+    if not displayname:
+        # Use the user ID as the displayname if not provided
+        displayname = user_id
+
+    return f'<a href="https://matrix.to/#/{user_id}">{displayname}</a>'
