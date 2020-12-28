@@ -435,12 +435,11 @@ class Command(object):
                 continue
 
             # Organise alarms into markdown lists
+            line = "- "
             if reminder.alarm:
                 # Note that an alarm exists if available
                 alarm_clock_emoji = "⏰"
-                line = f"- {alarm_clock_emoji} "
-            else:
-                line = "- "
+                line += alarm_clock_emoji
 
             # Print the duration before (next) execution
             next_execution = reminder.job.next_run_time
