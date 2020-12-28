@@ -297,13 +297,13 @@ class Command(object):
         """Process the command"""
         if self.command in ["remindme", "remind", "r"]:
             await self._remind_me()
-        elif self.command == "remindroom":
+        elif self.command in ["remindroom", "rr"]:
             await self._remind_room()
-        elif self.command == "alarmme":
+        elif self.command in ["alarmme", "alarm", "a"]:
             await self._alarm_me()
-        elif self.command == "alarmroom":
+        elif self.command in ["alarmroom", "ar"]:
             await self._alarm_room()
-        elif self.command in ["listreminders", "listalarms"]:
+        elif self.command in ["listreminders", "listalarms", "list", "lr", "la", "l"]:
             await self._list_reminders()
         elif self.command in [
             "delreminder",
@@ -314,11 +314,17 @@ class Command(object):
             "deletealarm",
             "removealarm",
             "cancelalarm",
+            "cancel",
+            "rm",
+            "cr",
+            "ca",
+            "d",
+            "c",
         ]:
             await self._delete_reminder()
-        elif self.command == "silence":
+        elif self.command in ["silence", "s"]:
             await self._silence()
-        elif self.command == "help":
+        elif self.command in ["help", "h"]:
             await self._help()
 
     @command_syntax("[every <recurring time>;] <start time>; <reminder text>")
@@ -549,19 +555,19 @@ Create an optionally recurring reminder that notifies the whole room.
 the room):
 
 ```
-{c}remindroom [every <recurring time>;] <start time>; <reminder text>
+{c}remindroom|rr [every <recurring time>;] <start time>; <reminder text>
 ```
 
 List all active reminders for a room:
 
 ```
-{c}listreminders
+{c}listreminders|list|lr
 ```
 
 Cancel a reminder:
 
 ```
-{c}cancelreminder <reminder text>
+{c}cancelreminder|cancel|c <reminder text>
 ```
 
 **Alarms**
@@ -570,19 +576,19 @@ Create a reminder that will repeatedly sound every 5m after its usual
 fire time. Otherwise, the syntax is the same as a reminder:
 
 ```
-{c}alarmme [every <recurring time>;] <start time>; <reminder text>
+{c}alarmme|alarm|a [every <recurring time>;] <start time>; <reminder text>
 ```
 
 or for notifying the whole room:
 
 ```
-{c}alarmroom [every <recurring time>;] <start time>; <reminder text>
+{c}alarmroom|ar [every <recurring time>;] <start time>; <reminder text>
 ```
 
 Once firing, an alarm can be silenced with:
 
 ```
-{c}silence [<reminder text>]
+{c}silence|s [<reminder text>]
 ```
 
 **Cron-tab Syntax**
@@ -591,7 +597,7 @@ If you need more complicated recurring reminders, you can make use of
 cron-tab syntax:
 
 ```
-{c}remindme cron <min> <hour> <day of month> <month> <day of week>; <reminder text>
+{c}remindme|remind|r cron <min> <hour> <day of month> <month> <day of week>; <reminder text>
 ```
 
 This syntax is supported by any `{c}remind...` or `{c}alarm...` command above.
