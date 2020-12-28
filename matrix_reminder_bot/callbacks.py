@@ -1,4 +1,6 @@
 import logging
+import re
+from typing import List
 
 from nio import (
     AsyncClient,
@@ -30,37 +32,70 @@ class Callbacks(object):
         self.client = client
         self.store = store
 
+    @staticmethod
+    def str_strip(s: str, phrases: List[str]) -> str:
+        """
+        Strip instances of a string in leading and trailing positions around another string.
+        Like str.rstrip but with strings instead of individual characters.
+        Also runs str.strip on s.
+
+        Args:
+            s: The string to strip.
+            phrases: A list of strings to strip from s.
+        """
+        # Strip the string of whitespace
+        s = s.strip()
+
+        for phrase in phrases:
+            # Use a regex to strip leading strings from another string
+            #
+            # We use re.S to treat the input text as one line (aka not strip leading
+            # phrases from every line of the message.
+            match = re.match(f"({phrase})*(.*)", s, flags=re.S)
+
+            # Extract the text between the parentheses in the pattern above
+            # Note that the above pattern is guaranteed to find a match, even with an empty str
+            s = match.group(2)
+
+            # Now attempt to strip trailing strings.
+            match = re.match(f"(.*)({phrase})$", s, flags=re.S)
+            if match:
+                s = match.group(1)
+
+        # After attempting to strip leading and trailing phrases from the string, return it
+        return s
+
     async def message(self, room: MatrixRoom, event: RoomMessageText):
         """Callback for when a message event is received"""
-        # Extract the formatted message text, or the basic text if no formatting is available
-        msg = event.formatted_body or event.body
-        if not msg:
-            return
-
         # Ignore messages from ourselves
         if event.sender == self.client.user:
+            return
+
+        # Ignore broken events
+        if not event.body:
+            return
+
+        # We do some stripping just to remove any surrounding formatting
+        formatting_chars = ["<p>", "\\n", "</p>"]
+        body = self.str_strip(event.body, formatting_chars)
+        formatted_body = (
+            self.str_strip(event.formatted_body, formatting_chars)
+            if event.formatted_body
+            else None
+        )
+
+        # Use the formatted message text, or the basic text if no formatting is available
+        msg = formatted_body or body
+        if not msg:
+            logger.info("No msg!")
             return
 
         # Check whether this is a command
         #
         # We use event.body here as formatted bodies can start with <p> instead of the
         # command prefix
-        if not event.body.startswith(CONFIG.command_prefix):
+        if not body.startswith(CONFIG.command_prefix):
             return
-
-        # It's possible to erraneous HTML tags to appear before the command prefix when
-        # making use of event.formatted_body. Typically <p> when commands include newlines
-        # This can cause the command code to break.
-        #
-        # We've already determined this is a command, so strip everything in the msg before
-        # the first instance of the command prefix as a workaround
-        prefix_index = msg.find(CONFIG.command_prefix)
-        if prefix_index != -1:
-            msg = msg[prefix_index:]
-        else:
-            # This formatted body doesn't contain the command prefix for some reason.
-            # Use event.body instead then
-            msg = event.body
 
         logger.debug("Command received: %s", msg)
 
