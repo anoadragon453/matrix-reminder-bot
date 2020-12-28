@@ -73,7 +73,10 @@ class Command(object):
         logger.debug("Parsing cron command arguments: %s", args_str)
 
         # Split into cron tab and reminder text
-        cron_tab, reminder_text = args_str.split(";", maxsplit=1)
+        try:
+            cron_tab, reminder_text = args_str.split(";", maxsplit=1)
+        except ValueError:
+            raise CommandSyntaxError()
 
         return cron_tab, reminder_text.strip()
 
@@ -122,7 +125,10 @@ class Command(object):
             logger.debug("Recurring timedelta: %s", recurse_timedelta)
 
             # Extract the start time
-            time_str, reminder_text = reminder_text.split(";", maxsplit=1)
+            try:
+                time_str, reminder_text = reminder_text.split(";", maxsplit=1)
+            except ValueError:
+                raise CommandSyntaxError()
             reminder_text = reminder_text.strip()
 
             logger.debug("Start time: %s", time_str)
