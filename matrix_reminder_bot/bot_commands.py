@@ -480,8 +480,8 @@ class Command(object):
 
         if (
             not one_shot_reminder_lines
-            or not cron_reminder_lines
-            or not interval_reminder_lines
+            and not cron_reminder_lines
+            and not interval_reminder_lines
         ):
             await send_text_to_room(
                 self.client,
