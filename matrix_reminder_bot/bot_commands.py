@@ -574,13 +574,13 @@ the room):
 List all active reminders for a room:
 
 ```
-{c}listreminders|list|lr
+{c}listreminders|list|lr|l
 ```
 
 Cancel a reminder:
 
 ```
-{c}cancelreminder|cancel|c <reminder text>
+{c}cancelreminder|cancel|cr|c <reminder text>
 ```
 
 **Alarms**
