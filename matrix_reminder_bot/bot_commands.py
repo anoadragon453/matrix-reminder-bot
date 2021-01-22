@@ -453,7 +453,7 @@ class Command(object):
             if reminder.alarm:
                 # Note that an alarm exists if available
                 alarm_clock_emoji = "⏰"
-                line += alarm_clock_emoji
+                line += alarm_clock_emoji + " "
 
             # Print the duration before (next) execution
             next_execution = reminder.job.next_run_time
