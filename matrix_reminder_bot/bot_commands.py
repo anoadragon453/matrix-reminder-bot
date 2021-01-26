@@ -418,11 +418,19 @@ class Command(object):
     async def _list_reminders(self):
         """Format and show known reminders for the current room
 
-        Sends a message listing them in the following format:
+        Sends a message listing them in the following format, using the alarm clock emoji ⏰ to indicate an alarm:
 
-            Reminders for this room:
+            1️⃣ One-time Reminders
 
-            <start time>: <reminder text> [(every <recurring time>)] [(has alarm)]
+            * [⏰] <start time>: <reminder text>
+
+            📅 Cron Reminders
+
+            * [⏰] m h d M wd (`m h d M wd`); next run in <rounded next time>; <reminder text>
+
+            🔁 Repeating Reminders
+
+            * [⏰] every <recurring time>; next run in <rounded next time>; <reminder text>
 
         or if there are no reminders set:
 
@@ -445,7 +453,7 @@ class Command(object):
             if reminder.alarm:
                 # Note that an alarm exists if available
                 alarm_clock_emoji = "⏰"
-                line += alarm_clock_emoji
+                line += alarm_clock_emoji + " "
 
             # Print the duration before (next) execution
             next_execution = reminder.job.next_run_time
@@ -566,13 +574,13 @@ the room):
 List all active reminders for a room:
 
 ```
-{c}listreminders|list|lr
+{c}listreminders|list|lr|l
 ```
 
 Cancel a reminder:
 
 ```
-{c}cancelreminder|cancel|c <reminder text>
+{c}cancelreminder|cancel|cr|c <reminder text>
 ```
 
 **Alarms**
