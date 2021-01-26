@@ -30,7 +30,7 @@ FROM docker.io/python:${PYTHON_VERSION}-alpine3.12 as builder
 ##
 
 # Install libolm build dependencies
-ARG LIBOLM_VERSION=3.1.4
+ARG LIBOLM_VERSION=3.2.1
 RUN apk add --no-cache \
     make \
     cmake \
