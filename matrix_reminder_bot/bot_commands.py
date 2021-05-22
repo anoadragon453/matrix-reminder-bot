@@ -11,7 +11,7 @@ from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 from nio import AsyncClient, MatrixRoom
 from nio.events.room_events import RoomMessageText
-from pretty_cron import prettify_cron
+from cron_descriptor import get_description
 from readabledelta import readabledelta
 
 from matrix_reminder_bot.config import CONFIG
@@ -462,7 +462,7 @@ class Command(object):
             # Cron-based reminders
             if isinstance(reminder.job.trigger, CronTrigger):
                 # A human-readable cron tab, in addition to the actual tab
-                line += f"{prettify_cron(reminder.cron_tab)} (`{reminder.cron_tab}`); next run {next_execution.humanize()}"
+                line += f"{get_description(reminder.cron_tab)} (`{reminder.cron_tab}`); next run {next_execution.humanize()}"
 
             # One-time reminders
             elif isinstance(reminder.job.trigger, DateTrigger):
