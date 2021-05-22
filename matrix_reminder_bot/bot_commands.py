@@ -9,9 +9,9 @@ from apscheduler.job import Job
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
+from cron_descriptor import Options, get_description
 from nio import AsyncClient, MatrixRoom
 from nio.events.room_events import RoomMessageText
-from cron_descriptor import get_description, Options
 from readabledelta import readabledelta
 
 from matrix_reminder_bot.config import CONFIG
