@@ -11,7 +11,7 @@
 # An optional LIBOLM_VERSION build argument which sets the
 # version of libolm to build against. For example:
 #
-#    docker build -f docker/Dockerfile --build-arg LIBOLM_VERSION=3.1.4 .
+#    docker build -f docker/Dockerfile --build-arg LIBOLM_VERSION=3.2.4 .
 #
 
 
@@ -30,7 +30,7 @@ FROM docker.io/python:${PYTHON_VERSION}-alpine3.12 as builder
 ##
 
 # Install libolm build dependencies
-ARG LIBOLM_VERSION=3.2.1
+ARG LIBOLM_VERSION=3.2.4
 RUN apk add --no-cache \
     make \
     cmake \
