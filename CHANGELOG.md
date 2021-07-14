@@ -1,5 +1,37 @@
 # Changelog
 
+## v0.2.1
+
+Quick patch to bump `matrix-nio` to version `>=0.18`, as otherwise that is required for the bot to work with Synapse 1.38+.
+See https://github.com/anoadragon453/matrix-reminder-bot/issues/86 for details on the bug.
+
+Otherwise, full changelog below:
+
+### Features
+
+* Improve the '!listreminders' output.
+* Add one-letter aliases to each command.
+* Add 'remind' as an alias for the 'remindme' command.
+* Use a pill when reminding a user.
+
+### Bugfixes
+
+* Timezone errors due to daylight savings times will be corrected after a bridge restart.
+* Prevent timezone-related errors when creating a reminder.
+* Better parsing of reminders that have newlines.
+
+### Documentation
+
+* Add release instructions.
+
+### Internal Changes
+
+* Update setup.py to indicate Python 3.6+ is required.
+* Bump minimum version of matrix-nio to 0.18.
+* Bump the version of libolm to 3.2.4.
+* Bump the version of Python in the CI to 3.9.
+
+
 ## v0.2.0
 
 Lots of changes, updates and polishing! Find the list below:
