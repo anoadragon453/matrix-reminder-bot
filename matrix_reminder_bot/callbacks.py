@@ -126,7 +126,7 @@ class Callbacks(object):
         # Attempt to join 3 times before giving up
         for attempt in range(3):
             result = await self.client.join(room.room_id)
-            if type(result) == JoinError:
+            if type(result) is JoinError:
                 logger.error(
                     f"Error joining room {room.room_id} (attempt %d): %s",
                     attempt,
