@@ -43,6 +43,7 @@ jobs:
 
   docker-build-push-ghcr:
     runs-on: ubuntu-latest
+    if: ${{ always() }}
     needs: docker-build-python-versions-matrix
     outputs:
       docker-tag: ${{ steps.meta.outputs.version }}
