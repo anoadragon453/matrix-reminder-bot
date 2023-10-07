@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  pull_request:
+
+env:
+  DOCKER_IMAGE: ghcr.io/anoadragon453/matrix-reminder-bot
+
+jobs:
+  docker-build-python-versions-matrix:
+    strategy:
+      matrix:
+        version: ['3.9', '3.10', '3.11', '3.12']
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # required for changesets
+          fetch-depth: '0'
+          # don't persist the credentials so the changesets action doesn't use the
+          # github actions token but the git token provided via environment variable
+          persist-credentials: false
+
+      - name: Setup buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          platforms: linux/amd64,linux/arm64
+
+      - name: Docker build
+        uses: docker/build-push-action@v5
+        id: dockerBuild
+        with:
+          push: false
+          context: .
+          file: ./docker/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          build-arg: PYTHON_VERSION=${{ matrix.version }}
+
+  docker-build-push-ghcr:
+    runs-on: ubuntu-latest
+    outputs:
+      docker-tag: ${{ steps.meta.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # required for changesets
+          fetch-depth: '0'
+          # don't persist the credentials so the changesets action doesn't use the
+          # github actions token but the git token provided via environment variable
+          persist-credentials: false
+
+      - name: Login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_IMAGE }}
+          labels: |
+            org.opencontainers.image.title=Matrix Reminder Bot
+            org.opencontainers.image.description=A bot to remind you about stuff. Supports encrypted rooms.
+          tags: |
+            type=ref,enable=true,priority=900,event=tag
+            type=raw,value=latest,enable={{tag != ''}},priority=800
+            type=raw,value=dev,enable={{is_default_branch}},priority=700
+            type=ref,event=pr,enable=true,priority=600
+
+      - name: Setup buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          platforms: linux/amd64,linux/arm64
+
+      - name: Docker build and push
+        uses: docker/build-push-action@v5
+        id: dockerBuild
+        with:
+          push: true
+          context: .
+          file: ./docker/Dockerfile
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64

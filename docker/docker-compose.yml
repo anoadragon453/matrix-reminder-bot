@@ -27,7 +27,7 @@ services:
       dockerfile: docker/Dockerfile
       # Build arguments may be specified here
       # args:
-      #  PYTHON_VERSION: 3.8
+      #  PYTHON_VERSION: 3.11
     volumes:
       - data_volume:/data
     # Used for allowing connections to homeservers hosted on the host machine
@@ -44,7 +44,7 @@ services:
       dockerfile: docker/Dockerfile.dev
       # Build arguments may be specified here
       # args:
-      #  PYTHON_VERSION: 3.8
+      #  PYTHON_VERSION: 3.11
     volumes:
       - data_volume:/data
     # Used for allowing connections to homeservers hosted on the host machine
