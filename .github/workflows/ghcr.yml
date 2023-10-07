@@ -39,7 +39,8 @@ jobs:
           context: .
           file: ./docker/Dockerfile
           platforms: linux/amd64,linux/arm64
-          build-arg: PYTHON_VERSION=${{ matrix.version }}
+          build-args: |
+            PYTHON_VERSION=${{ matrix.version }}
 
   docker-build-push-ghcr:
     runs-on: ubuntu-latest
