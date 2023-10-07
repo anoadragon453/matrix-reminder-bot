@@ -73,7 +73,7 @@ async def main():
                 )
 
                 # Check if login failed. Usually incorrect password
-                if type(login_response) == LoginError:
+                if type(login_response) is LoginError:
                     logger.error("Failed to login: %s", login_response.message)
                     logger.warning("Trying again in 15s...")
 
