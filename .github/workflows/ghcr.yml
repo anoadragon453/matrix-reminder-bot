@@ -1,4 +1,4 @@
-name: CI
+name: ghcr
 
 on:
   push:
@@ -15,7 +15,9 @@ jobs:
   docker-build-python-versions-matrix:
     strategy:
       matrix:
-        version: ['3.9', '3.10', '3.11', '3.12']
+        version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+        arch: ['linux/amd64', 'linux/arm64']
+      fail-fast: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,8 +40,9 @@ jobs:
           push: false
           context: .
           file: ./docker/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          build-arg: PYTHON_VERSION=${{ matrix.version }}
+          platforms: ${{ matrix.arch }}
+          build-args: |
+            PYTHON_VERSION=${{ matrix.version }}
 
   docker-build-push-ghcr:
     runs-on: ubuntu-latest
@@ -70,8 +73,7 @@ jobs:
             org.opencontainers.image.title=Matrix Reminder Bot
             org.opencontainers.image.description=A bot to remind you about stuff. Supports encrypted rooms.
           tags: |
-            type=ref,enable=true,priority=900,event=tag
-            type=raw,value=latest,enable=${{tag != ''}},priority=800
+            type=ref,event=tag,enable=true,priority=900
             type=raw,value=dev,enable={{is_default_branch}},priority=700
             type=ref,event=pr,enable=true,priority=600
 
