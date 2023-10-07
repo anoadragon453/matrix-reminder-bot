@@ -70,8 +70,7 @@ jobs:
             org.opencontainers.image.title=Matrix Reminder Bot
             org.opencontainers.image.description=A bot to remind you about stuff. Supports encrypted rooms.
           tags: |
-            type=ref,enable=true,priority=900,event=tag
-            type=raw,value=latest,enable=${{tag != ''}},priority=800
+            type=ref,event=tag,enable=true,priority=900
             type=raw,value=dev,enable={{is_default_branch}},priority=700
             type=ref,event=pr,enable=true,priority=600
 
