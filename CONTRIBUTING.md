@@ -68,4 +68,5 @@ list](https://github.com/anoadragon453/matrix-reminder-bot/issues). What
 feature would you like to see or bug do you want to be fixed?
 
 If you would like to talk any ideas over before working on them, you can reach
-me at `@andrewm:amorgan.xyz` on matrix.
+the maintainers at [`#matrix-reminder-bot:amorgan.xyz`](https://matrix.to/#/#matrix-reminder-bot:amorgan.xyz)
+on matrix.
