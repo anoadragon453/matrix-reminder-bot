@@ -42,6 +42,12 @@ class Config:
 
         self.timezone: str = ""
 
+        self.allowlist_enabled: bool = False
+        self.allowlist_regexes: list[str] = []
+
+        self.blocklist_enabled: bool = False
+        self.blocklist_regexes: list[str] = []
+
     def read_config(self, filepath: str):
         if not os.path.isfile(filepath):
             raise ConfigError(f"Config file '{filepath}' does not exist")
@@ -121,6 +127,48 @@ class Config:
 
         # Reminder configuration
         self.timezone = self._get_cfg(["reminders", "timezone"], default="Etc/UTC")
+
+        # Allowlist configuration
+        allowlist_enabled = self._get_cfg(["allowlist", "enabled"], required=True)
+        if not isinstance(allowlist_enabled, bool):
+            raise ConfigError("allowlist.enabled must be a boolean value")
+        self.allowlist_enabled = allowlist_enabled
+
+        allowlist_regexes = self._get_cfg(["allowlist", "regexes"], required=True)
+        if not isinstance(allowlist_regexes, list) or (
+            isinstance(allowlist_regexes, list)
+            and any(not isinstance(x, str) for x in allowlist_regexes)
+        ):
+            raise ConfigError("allowlist.regexes must be a list of strings")
+        for regex in allowlist_regexes:
+            try:
+                re.compile(regex)
+            except re.error:
+                raise ConfigError(
+                    f"'{regex}' contained in allowlist.regexes is not a valid regular expression"
+                )
+        self.allowlist_regexes = allowlist_regexes
+
+        # Blocklist configuration
+        blocklist_enabled = self._get_cfg(["blocklist", "enabled"], required=True)
+        if not isinstance(blocklist_enabled, bool):
+            raise ConfigError("blocklist.enabled must be a boolean value")
+        self.blocklist_enabled = blocklist_enabled
+
+        blocklist_regexes = self._get_cfg(["blocklist", "regexes"], required=True)
+        if not isinstance(blocklist_regexes, list) or (
+            isinstance(blocklist_regexes, list)
+            and any(not isinstance(x, str) for x in blocklist_regexes)
+        ):
+            raise ConfigError("blocklist.regexes must be a list of strings")
+        for regex in blocklist_regexes:
+            try:
+                re.compile(regex)
+            except re.error:
+                raise ConfigError(
+                    f"'{regex}' contained in blocklist.regexes is not a valid regular expression"
+                )
+        self.blocklist_regexes = blocklist_regexes
 
     def _get_cfg(
         self,
