@@ -115,3 +115,29 @@ def make_pill(user_id: str, displayname: str = None) -> str:
         displayname = user_id
 
     return f'<a href="https://matrix.to/#/{user_id}">{displayname}</a>'
+
+
+def is_allowed_user(user_id: str) -> bool:
+    """Returns if the bot is allowed to interact with the given user
+
+    Args:
+        user_id: The MXID of the user.
+
+    Returns:
+        True, if the bot is allowed to interact with the given user.
+    """
+    allowed = not CONFIG.allowlist_enabled
+
+    if CONFIG.allowlist_enabled:
+        for regex in CONFIG.allowlist_regexes:
+            if regex.fullmatch(user_id):
+                allowed = True
+                break
+
+    if CONFIG.blocklist_enabled:
+        for regex in CONFIG.blocklist_regexes:
+            if regex.fullmatch(user_id):
+                allowed = False
+                break
+
+    return allowed
