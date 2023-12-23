@@ -14,7 +14,7 @@ from nio import (
 from matrix_reminder_bot.bot_commands import Command
 from matrix_reminder_bot.config import CONFIG
 from matrix_reminder_bot.errors import CommandError
-from matrix_reminder_bot.functions import send_text_to_room
+from matrix_reminder_bot.functions import is_allowed_user, send_text_to_room
 from matrix_reminder_bot.storage import Storage
 
 logger = logging.getLogger(__name__)
@@ -71,6 +71,13 @@ class Callbacks(object):
         if event.sender == self.client.user:
             return
 
+        # Ignore messages from disallowed users
+        if not is_allowed_user(event.sender):
+            logger.debug(
+                f"Ignoring event {event.event_id} in room {room.room_id} as the sender {event.sender} is not allowed."
+            )
+            return
+
         # Ignore broken events
         if not event.body:
             return
@@ -122,6 +129,11 @@ class Callbacks(object):
     async def invite(self, room: MatrixRoom, event: InviteMemberEvent):
         """Callback for when an invite is received. Join the room specified in the invite"""
         logger.debug(f"Got invite to {room.room_id} from {event.sender}.")
+
+        # Don't respond to invites from disallowed users
+        if not is_allowed_user(event.sender):
+            logger.info(f"{event.sender} is not allowed, not responding to invite.")
+            return
 
         # Attempt to join 3 times before giving up
         for attempt in range(3):
