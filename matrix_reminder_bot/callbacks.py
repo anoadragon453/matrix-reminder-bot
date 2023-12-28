@@ -132,7 +132,7 @@ class Callbacks(object):
 
         # Don't respond to invites from disallowed users
         if not is_allowed_user(event.sender):
-            logger.info(f"{event.sender} is not allowed, not responding to invite.")
+            logger.debug(f"{event.sender} is not allowed, not responding to invite.")
             return
 
         # Attempt to join 3 times before giving up
