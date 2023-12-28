@@ -134,22 +134,9 @@ class Config:
             raise ConfigError("allowlist.enabled must be a boolean value")
         self.allowlist_enabled = allowlist_enabled
 
-        allowlist_strings = self._get_cfg(["allowlist", "regexes"], required=True)
-        if not isinstance(allowlist_strings, list) or (
-            isinstance(allowlist_strings, list)
-            and any(not isinstance(x, str) for x in allowlist_strings)
-        ):
-            raise ConfigError("allowlist.regexes must be a list of strings")
-
-        allowlist_regexes = []
-        for regex in allowlist_strings:
-            try:
-                allowlist_regexes.append(re.compile(regex))
-            except re.error:
-                raise ConfigError(
-                    f"'{regex}' contained in allowlist.regexes is not a valid regular expression"
-                )
-        self.allowlist_regexes = allowlist_regexes
+        self.allowlist_regexes = self._compile_regexes(
+            ["allowlist", "regexes"], required=True
+        )
 
         # Blocklist configuration
         blocklist_enabled = self._get_cfg(["blocklist", "enabled"], required=True)
@@ -157,22 +144,48 @@ class Config:
             raise ConfigError("blocklist.enabled must be a boolean value")
         self.blocklist_enabled = blocklist_enabled
 
-        blocklist_strings = self._get_cfg(["blocklist", "regexes"], required=True)
-        if not isinstance(blocklist_strings, list) or (
-            isinstance(blocklist_strings, list)
-            and any(not isinstance(x, str) for x in blocklist_strings)
-        ):
-            raise ConfigError("blocklist.regexes must be a list of strings")
+        self.blocklist_regexes = self._compile_regexes(
+            ["blocklist", "regexes"], required=True
+        )
 
-        blocklist_regexes = []
-        for regex in blocklist_strings:
+    def _compile_regexes(
+        self, path: list[str], required: bool = True
+    ) -> list[re.Pattern]:
+        """Compile a config option containing a list of strings into re.Pattern objects.
+
+        Args:
+            path: The path to the config option.
+            required: True, if the config option is mandatory.
+
+        Returns:
+            A list of re.Pattern objects.
+
+        Raises:
+            ConfigError:
+                - If required is specified, but the config option does not exist.
+                - If the config option is not a list of strings.
+                - If the config option contains an invalid regular expression.
+        """
+
+        readable_path = ".".join(path)
+        regex_strings = self._get_cfg(path, required=required)  # raises ConfigError
+
+        if not isinstance(regex_strings, list) or (
+            isinstance(regex_strings, list)
+            and any(not isinstance(x, str) for x in regex_strings)
+        ):
+            raise ConfigError(f"{readable_path} must be a list of strings")
+
+        compiled_regexes = []
+        for regex in regex_strings:
             try:
-                blocklist_regexes.append(re.compile(regex))
-            except re.error:
+                compiled_regexes.append(re.compile(regex))
+            except re.error as e:
                 raise ConfigError(
-                    f"'{regex}' contained in blocklist.regexes is not a valid regular expression"
+                    f"'{e.pattern}' contained in {readable_path} is not a valid regular expression"
                 )
-        self.blocklist_regexes = blocklist_regexes
+
+        return compiled_regexes
 
     def _get_cfg(
         self,
