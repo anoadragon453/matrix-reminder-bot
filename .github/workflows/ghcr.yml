@@ -15,7 +15,7 @@ jobs:
   docker-build-python-versions-matrix:
     strategy:
       matrix:
-        version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+        version: ['3.8', '3.9', '3.10', '3.11']
         arch: ['linux/amd64', 'linux/arm64']
       fail-fast: false
     runs-on: ubuntu-latest
