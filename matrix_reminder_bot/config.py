@@ -42,6 +42,12 @@ class Config:
 
         self.timezone: str = ""
 
+        self.allowlist_enabled: bool = False
+        self.allowlist_regexes: list[re.Pattern] = []
+
+        self.blocklist_enabled: bool = False
+        self.blocklist_regexes: list[re.Pattern] = []
+
     def read_config(self, filepath: str):
         if not os.path.isfile(filepath):
             raise ConfigError(f"Config file '{filepath}' does not exist")
@@ -121,6 +127,65 @@ class Config:
 
         # Reminder configuration
         self.timezone = self._get_cfg(["reminders", "timezone"], default="Etc/UTC")
+
+        # Allowlist configuration
+        allowlist_enabled = self._get_cfg(["allowlist", "enabled"], required=True)
+        if not isinstance(allowlist_enabled, bool):
+            raise ConfigError("allowlist.enabled must be a boolean value")
+        self.allowlist_enabled = allowlist_enabled
+
+        self.allowlist_regexes = self._compile_regexes(
+            ["allowlist", "regexes"], required=True
+        )
+
+        # Blocklist configuration
+        blocklist_enabled = self._get_cfg(["blocklist", "enabled"], required=True)
+        if not isinstance(blocklist_enabled, bool):
+            raise ConfigError("blocklist.enabled must be a boolean value")
+        self.blocklist_enabled = blocklist_enabled
+
+        self.blocklist_regexes = self._compile_regexes(
+            ["blocklist", "regexes"], required=True
+        )
+
+    def _compile_regexes(
+        self, path: list[str], required: bool = True
+    ) -> list[re.Pattern]:
+        """Compile a config option containing a list of strings into re.Pattern objects.
+
+        Args:
+            path: The path to the config option.
+            required: True, if the config option is mandatory.
+
+        Returns:
+            A list of re.Pattern objects.
+
+        Raises:
+            ConfigError:
+                - If required is specified, but the config option does not exist.
+                - If the config option is not a list of strings.
+                - If the config option contains an invalid regular expression.
+        """
+
+        readable_path = ".".join(path)
+        regex_strings = self._get_cfg(path, required=required)  # raises ConfigError
+
+        if not isinstance(regex_strings, list) or (
+            isinstance(regex_strings, list)
+            and any(not isinstance(x, str) for x in regex_strings)
+        ):
+            raise ConfigError(f"{readable_path} must be a list of strings")
+
+        compiled_regexes = []
+        for regex in regex_strings:
+            try:
+                compiled_regexes.append(re.compile(regex))
+            except re.error as e:
+                raise ConfigError(
+                    f"'{e.pattern}' contained in {readable_path} is not a valid regular expression"
+                )
+
+        return compiled_regexes
 
     def _get_cfg(
         self,
