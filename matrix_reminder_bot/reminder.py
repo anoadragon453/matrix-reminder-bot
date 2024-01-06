@@ -160,8 +160,8 @@ class Reminder(object):
             self.room_id,
             message,
             notice=False,
-            mentions_user_ids=[self.target_user] if self.has_target() else [],
-            mentions_room=self.has_target(),
+            mentions_user_ids=[self.target_user] if self.has_target() else None,
+            mentions_room=not self.has_target(),
         )
 
     def cancel(self, cancel_alarm: bool = True):
