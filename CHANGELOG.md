@@ -13,29 +13,29 @@ More details below:
 
 ### Features
 
-* Implement allowlist and blocklist https://github.com/anoadragon453/matrix-reminder-bot/pull/120 by @svierne
-* Support Matrix v1.9 mentions https://github.com/anoadragon453/matrix-reminder-bot/pull/124 by @svierne
+* Implement allowlist and blocklist https://github.com/anoadragon453/matrix-reminder-bot/pull/120 by @svierne.
+* Support Matrix v1.9 mentions https://github.com/anoadragon453/matrix-reminder-bot/pull/124 by @svierne.
 
 ### Bugfixes
 
-* Add pills in missing places and remove invalid pills for room pings https://github.com/anoadragon453/matrix-reminder-bot/pull/124 by @svierne
-* Fixup for room pills https://github.com/anoadragon453/matrix-reminder-bot/pull/129
+* Add pills in missing places and remove invalid pills for room pings https://github.com/anoadragon453/matrix-reminder-bot/pull/124 by @svierne.
+* Fixup for room pills https://github.com/anoadragon453/matrix-reminder-bot/pull/129.
 
 ### Documentation
 
-* Update contributing guidelines https://github.com/anoadragon453/matrix-reminder-bot/pull/116
+* Update contributing guidelines https://github.com/anoadragon453/matrix-reminder-bot/pull/116.
 
 ### Internal Changes
 
-* Add automatic Python dependency version update checking dependabot config https://github.com/anoadragon453/matrix-reminder-bot/pull/103
-* Bump `black` https://github.com/anoadragon453/matrix-reminder-bot/pull/103, https://github.com/anoadragon453/matrix-reminder-bot/pull/105, https://github.com/anoadragon453/matrix-reminder-bot/pull/113, https://github.com/anoadragon453/matrix-reminder-bot/pull/121
-* Bump `flake8` https://github.com/anoadragon453/matrix-reminder-bot/pull/106, 
-* Bump `isort` https://github.com/anoadragon453/matrix-reminder-bot/pull/107, https://github.com/anoadragon453/matrix-reminder-bot/pull/117, https://github.com/anoadragon453/matrix-reminder-bot/pull/119
-* Bump `flake8-comprehensions` https://github.com/anoadragon453/matrix-reminder-bot/pull/104
-* Bump the version of Python in the CI and docker image to 3.11 https://github.com/anoadragon453/matrix-reminder-bot/pull/108
-* Bump `libolm` to 3.2.15 https://github.com/anoadragon453/matrix-reminder-bot/pull/108
-* Add CI building containers with all supported Python versions and both amd64 and arm64 for PRs, pushes to master branch (`dev` tag), and releases. See https://github.com/anoadragon453/matrix-reminder-bot/pkgs/container/matrix-reminder-bot for development artifacts. https://github.com/anoadragon453/matrix-reminder-bot/pull/108, https://github.com/anoadragon453/matrix-reminder-bot/pull/110, https://github.com/anoadragon453/matrix-reminder-bot/pull/125
-* Bump GitHub actions https://github.com/anoadragon453/matrix-reminder-bot/pull/111
+* Add automatic Python dependency version update checking dependabot config https://github.com/anoadragon453/matrix-reminder-bot/pull/103.
+* Bump `black` https://github.com/anoadragon453/matrix-reminder-bot/pull/103, https://github.com/anoadragon453/matrix-reminder-bot/pull/105, https://github.com/anoadragon453/matrix-reminder-bot/pull/113, https://github.com/anoadragon453/matrix-reminder-bot/pull/121.
+* Bump `flake8` https://github.com/anoadragon453/matrix-reminder-bot/pull/106.
+* Bump `isort` https://github.com/anoadragon453/matrix-reminder-bot/pull/107, https://github.com/anoadragon453/matrix-reminder-bot/pull/117, https://github.com/anoadragon453/matrix-reminder-bot/pull/119.
+* Bump `flake8-comprehensions` https://github.com/anoadragon453/matrix-reminder-bot/pull/104.
+* Bump the version of Python in the CI and docker image to 3.11 https://github.com/anoadragon453/matrix-reminder-bot/pull/108.
+* Bump `libolm` to 3.2.15 https://github.com/anoadragon453/matrix-reminder-bot/pull/108.
+* Add CI building containers with all supported Python versions and both amd64 and arm64 for PRs, pushes to master branch (`dev` tag), and releases. See https://github.com/anoadragon453/matrix-reminder-bot/pkgs/container/matrix-reminder-bot for development artifacts. https://github.com/anoadragon453/matrix-reminder-bot/pull/108, https://github.com/anoadragon453/matrix-reminder-bot/pull/110, https://github.com/anoadragon453/matrix-reminder-bot/pull/125.
+* Bump GitHub actions https://github.com/anoadragon453/matrix-reminder-bot/pull/111.
 
 
 ## v0.2.1
