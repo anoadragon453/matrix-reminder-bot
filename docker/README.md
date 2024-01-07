@@ -4,6 +4,12 @@ The docker image will run matrix-reminder-bot with a SQLite database and
 end-to-end encryption dependencies included. For larger deployments, a
 connection to a Postgres database backend is recommended.
 
+A pre-built image for amd64 and arm64 platforms is provided by our CI on both
+- https://hub.docker.com/r/anoa/matrix-reminder-bot
+- https://github.com/anoadragon453/matrix-reminder-bot/pkgs/container/matrix-reminder-bot.
+
+You can always also build the image yourself, see below for instructions.
+
 ## Setup
 
 ### The `/data` volume
@@ -88,6 +94,12 @@ docker-compose up -d matrix-reminder-bot
 
 This will use the `matrix-reminder-bot:latest` tag from
 [Docker Hub](https://hub.docker.com/r/anoa/matrix-reminder-bot).
+
+If you would rather pull the image from GHCR instead, you can use:
+
+```
+docker-compose up -d matrix-reminder-bot-ghcr
+```
 
 If you would rather run from the checked out code, you can use:
 
