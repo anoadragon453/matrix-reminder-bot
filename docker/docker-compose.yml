@@ -20,6 +20,19 @@ services:
     extra_hosts:
       - "localhost:${HOST_IP_ADDRESS}"
 
+  # Runs from the latest release, but pulls the image from GitHub instead of Docker Hub
+  matrix-reminder-bot-ghcr:
+    image: ghcr.io/anoadragon453/matrix-reminder-bot
+    restart: always
+    volumes:
+      - data_volume:/data
+    # Used for allowing connections to homeservers hosted on the host machine
+    # (while docker host mode is still broken on Linux).
+    #
+    # Defaults to 127.0.0.1 and is set in docker/.env
+    extra_hosts:
+      - "localhost:${HOST_IP_ADDRESS}"
+
   # Builds and runs an optimized container from local code
   local-checkout:
     build:
