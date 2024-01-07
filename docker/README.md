@@ -87,7 +87,7 @@ docker-compose up -d matrix-reminder-bot
 (Logs can later be accessed with the `docker logs` command).
 
 This will use the `matrix-reminder-bot:latest` tag from
-[Docker Hub](https://hub.docker.com/anoa/matrix-reminder-bot).
+[Docker Hub](https://hub.docker.com/r/anoa/matrix-reminder-bot).
 
 If you would rather run from the checked out code, you can use:
 
