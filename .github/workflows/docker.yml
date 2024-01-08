@@ -57,7 +57,6 @@ jobs:
         with:
           images: |
             ${{ env.GHCR_IMAGE }}
-            ${{ env.HUB_IMAGE }}
           labels: |
             org.opencontainers.image.title=Matrix Reminder Bot
             org.opencontainers.image.description=A bot to remind you about stuff. Supports encrypted rooms.
@@ -78,12 +77,6 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: Docker build and push
         uses: docker/build-push-action@v5
         id: dockerBuild
@@ -94,3 +87,36 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
+
+  mirror-dockerhub:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: read
+    needs: [ build-push ]
+    if: ${{ github.ref.type == 'tag' }}
+    steps:
+      - name: Generate Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.HUB_IMAGE }}
+          tags: |
+            type=ref,event=tag,enable=true,priority=900
+            type=raw,value=dev,enable={{is_default_branch}},priority=700
+            type=ref,event=pr,enable=true,priority=600
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Docker pull-tag-push
+        run: |
+          docker pull ${{ env.GHCR_IMAGE }}:${{ needs.build-push.outputs.docker-tag }}
+          for new_tag in $tags  # bourne shell syntax splits string by space
+          do
+            docker tag ${{ env.GHCR_IMAGE }}:${{ needs.build-push.outputs.docker-tag }} $new_tag
+            docker push $new_tag
+          done
