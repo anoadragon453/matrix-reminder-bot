@@ -38,7 +38,7 @@ be aware that they are more complex.
 
 You can install [libolm](https://gitlab.matrix.org/matrix-org/olm) from source,
 or alternatively, check your system's package manager. Version `3.0.0` or
-greater is required.
+greater is required. Version `3.2.16` or greater is required with Python 3.12.
 
 **(Optional) postgres development headers**
 
