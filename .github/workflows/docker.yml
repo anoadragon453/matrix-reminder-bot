@@ -1,4 +1,4 @@
-name: ghcr
+name: docker
 
 on:
   push:
@@ -9,24 +9,21 @@ on:
   pull_request:
 
 env:
-  DOCKER_IMAGE: ghcr.io/anoadragon453/matrix-reminder-bot
+  GHCR_IMAGE: ghcr.io/anoadragon453/matrix-reminder-bot
+  HUB_IMAGE: anoa/matrix-reminder-bot
 
 jobs:
-  docker-build-python-versions-matrix:
+  build-python-versions-matrix:
     strategy:
       matrix:
-        version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+        version: ['3.8', '3.9', '3.10', '3.11']
         arch: ['linux/amd64', 'linux/arm64']
       fail-fast: false
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
-        with:
-          # required for changesets
-          fetch-depth: '0'
-          # don't persist the credentials so the changesets action doesn't use the
-          # github actions token but the git token provided via environment variable
-          persist-credentials: false
 
       - name: Setup buildx
         uses: docker/setup-buildx-action@v3
@@ -44,31 +41,22 @@ jobs:
           build-args: |
             PYTHON_VERSION=${{ matrix.version }}
 
-  docker-build-push-ghcr:
+  build-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     outputs:
       docker-tag: ${{ steps.meta.outputs.version }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          # required for changesets
-          fetch-depth: '0'
-          # don't persist the credentials so the changesets action doesn't use the
-          # github actions token but the git token provided via environment variable
-          persist-credentials: false
-
-      - name: Login to ghcr.io
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate Docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.DOCKER_IMAGE }}
+          images: |
+            ${{ env.GHCR_IMAGE }}
           labels: |
             org.opencontainers.image.title=Matrix Reminder Bot
             org.opencontainers.image.description=A bot to remind you about stuff. Supports encrypted rooms.
@@ -82,6 +70,13 @@ jobs:
         with:
           platforms: linux/amd64,linux/arm64
 
+      - name: Login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Docker build and push
         uses: docker/build-push-action@v5
         id: dockerBuild
@@ -92,3 +87,36 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64,linux/arm64
+
+  mirror-dockerhub:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: read
+    needs: [ build-push ]
+    if: ${{ github.ref.type == 'tag' }}
+    steps:
+      - name: Generate Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.HUB_IMAGE }}
+          tags: |
+            type=ref,event=tag,enable=true,priority=900
+            type=raw,value=dev,enable={{is_default_branch}},priority=700
+            type=ref,event=pr,enable=true,priority=600
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Docker pull-tag-push
+        run: |
+          docker pull ${{ env.GHCR_IMAGE }}:${{ needs.build-push.outputs.docker-tag }}
+          for new_tag in $tags  # bourne shell syntax splits string by space
+          do
+            docker tag ${{ env.GHCR_IMAGE }}:${{ needs.build-push.outputs.docker-tag }} $new_tag
+            docker push $new_tag
+          done

@@ -104,8 +104,8 @@ class Reminder(object):
         logger.debug("Reminder in room %s fired: %s", self.room_id, self.reminder_text)
 
         # Build the reminder message
-        target = self.target_user if self.target_user else "@room"
-        message = f"{make_pill(target)} {self.reminder_text}"
+        target = make_pill(self.target_user) if self.has_target() else "@room"
+        message = f"{target} {self.reminder_text}"
 
         # If this reminder has an alarm attached...
         if self.alarm:
@@ -129,7 +129,14 @@ class Reminder(object):
                 ALARMS[(self.room_id, self.reminder_text.upper())] = self.alarm_job
 
         # Send the message to the room
-        await send_text_to_room(self.client, self.room_id, message, notice=False)
+        await send_text_to_room(
+            self.client,
+            self.room_id,
+            message,
+            notice=False,
+            mentions_room=not self.has_target(),
+            mentions_user_ids=[self.target_user] if self.has_target() else None,
+        )
 
         # If this was a one-time reminder, cancel and remove from the reminders dict
         if not self.recurse_timedelta and not self.cron_tab:
@@ -141,14 +148,21 @@ class Reminder(object):
         logger.debug("Alarm in room %s fired: %s", self.room_id, self.reminder_text)
 
         # Build the alarm message
-        target = self.target_user if self.target_user else "@room"
+        target = make_pill(self.target_user) if self.has_target() else "@room"
         message = (
             f"Alarm: {target} {self.reminder_text} "
             f"(Use `{CONFIG.command_prefix}silence [reminder text]` to silence)."
         )
 
         # Send the message to the room
-        await send_text_to_room(self.client, self.room_id, message, notice=False)
+        await send_text_to_room(
+            self.client,
+            self.room_id,
+            message,
+            notice=False,
+            mentions_user_ids=[self.target_user] if self.has_target() else None,
+            mentions_room=not self.has_target(),
+        )
 
     def cancel(self, cancel_alarm: bool = True):
         """Cancels a reminder and all recurring instances
@@ -176,6 +190,10 @@ class Reminder(object):
 
             if self.alarm_job and SCHEDULER.get_job(self.alarm_job.id):
                 self.alarm_job.remove()
+
+    def has_target(self) -> bool:
+        """Returns whether the reminder has a target user."""
+        return self.target_user is not None
 
 
 # Global dictionaries

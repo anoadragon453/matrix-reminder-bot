@@ -17,6 +17,8 @@ async def send_text_to_room(
     notice: bool = True,
     markdown_convert: bool = True,
     reply_to_event_id: Optional[str] = None,
+    mentions_room: bool = False,
+    mentions_user_ids: Optional[list[str]] = None,
 ):
     """Send text to a matrix room.
 
@@ -35,7 +37,13 @@ async def send_text_to_room(
 
         reply_to_event_id: Whether this message is a reply to another event. The event
             ID this is message is a reply to.
+
+        mentions_room: Whether or not this message mentions the whole room.
+            Defaults to false.
+
+        mentions_user_ids: An optional list of MXIDs this message mentions.
     """
+
     # Determine whether to ping room members or not
     msgtype = "m.notice" if notice else "m.text"
 
@@ -43,6 +51,7 @@ async def send_text_to_room(
         "msgtype": msgtype,
         "format": "org.matrix.custom.html",
         "body": message,
+        "m.mentions": {},
     }
 
     if markdown_convert:
@@ -50,6 +59,12 @@ async def send_text_to_room(
 
     if reply_to_event_id:
         content["m.relates_to"] = {"m.in_reply_to": {"event_id": reply_to_event_id}}
+
+    if mentions_room:
+        content["m.mentions"]["room"] = True
+
+    if mentions_user_ids is not None:
+        content["m.mentions"]["user_ids"] = mentions_user_ids
 
     try:
         await client.room_send(
@@ -115,3 +130,29 @@ def make_pill(user_id: str, displayname: str = None) -> str:
         displayname = user_id
 
     return f'<a href="https://matrix.to/#/{user_id}">{displayname}</a>'
+
+
+def is_allowed_user(user_id: str) -> bool:
+    """Returns if the bot is allowed to interact with the given user
+
+    Args:
+        user_id: The MXID of the user.
+
+    Returns:
+        True, if the bot is allowed to interact with the given user.
+    """
+    allowed = not CONFIG.allowlist_enabled
+
+    if CONFIG.allowlist_enabled:
+        for regex in CONFIG.allowlist_regexes:
+            if regex.fullmatch(user_id):
+                allowed = True
+                break
+
+    if CONFIG.blocklist_enabled:
+        for regex in CONFIG.blocklist_regexes:
+            if regex.fullmatch(user_id):
+                allowed = False
+                break
+
+    return allowed

@@ -71,4 +71,6 @@ The following is a guide on the steps necessary to creating a release of `matrix
 	git push origin master
 	```
 
+1. Announce release on https://matrix.to/#/#thisweekinmatrix:matrix.org
+
 1. Celebrate!
