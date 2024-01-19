@@ -31,7 +31,7 @@ setup(
     description="A matrix bot to remind you about things!",
     packages=find_packages(exclude=["tests", "tests.*"]),
     install_requires=[
-        "matrix-nio[e2e]>=0.18.0",
+        "matrix-nio[e2e]>=0.24.0",
         "Markdown>=3.1.1",
         "PyYAML>=5.1.2",
         "dateparser>=0.7.4",
@@ -57,6 +57,7 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
     ],
     long_description=long_description,
     long_description_content_type="text/markdown",

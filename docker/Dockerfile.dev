@@ -21,7 +21,7 @@
 #    docker build -f docker/Dockerfile --build-arg LIBOLM_VERSION=3.2.15 .
 #
 
-ARG PYTHON_VERSION=3.11
+ARG PYTHON_VERSION=3.12
 FROM docker.io/python:${PYTHON_VERSION}-alpine3.18
 
 ##
@@ -29,7 +29,7 @@ FROM docker.io/python:${PYTHON_VERSION}-alpine3.18
 ##
 
 # Install libolm build dependencies
-ARG LIBOLM_VERSION=3.2.15
+ARG LIBOLM_VERSION=3.2.16
 RUN apk add --no-cache \
     make \
     cmake \

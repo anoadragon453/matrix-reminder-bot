@@ -22,7 +22,7 @@
 # We use an initial docker container to build all of the runtime dependencies,
 # then transfer those dependencies to the container we're going to ship,
 # before throwing this one away
-ARG PYTHON_VERSION=3.11
+ARG PYTHON_VERSION=3.12
 FROM docker.io/python:${PYTHON_VERSION}-alpine3.18 as builder
 
 ##
@@ -30,7 +30,7 @@ FROM docker.io/python:${PYTHON_VERSION}-alpine3.18 as builder
 ##
 
 # Install libolm build dependencies
-ARG LIBOLM_VERSION=3.2.15
+ARG LIBOLM_VERSION=3.2.16
 RUN apk add --no-cache \
     make \
     cmake \
