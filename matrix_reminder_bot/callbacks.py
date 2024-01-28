@@ -75,7 +75,10 @@ class Callbacks(object):
         join_time = 0
         state = await self.client.room_get_state(room.room_id)
         for membership in state.events:
-            if membership.get("type") == "m.room.member" and membership.get("state_key") == self.client.user_id:
+            if (
+                membership.get("type") == "m.room.member"
+                and membership.get("state_key") == self.client.user_id
+            ):
                 join_time = membership.get("origin_server_ts", 0)
         if join_time > event.server_timestamp:
             return
