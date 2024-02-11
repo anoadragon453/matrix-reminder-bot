@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 def _get_datetime_now(tz: str) -> datetime:
     """Returns a timezone-aware datetime object of the current time"""
     # Get a datetime with no timezone information
-    no_timezone_datetime = datetime(2009, 9, 1)
+    no_timezone_datetime = datetime.now()
 
     # Create a datetime.timezone object with the correct offset from UTC
     offset = timezone(pytz.timezone(tz).utcoffset(no_timezone_datetime))
