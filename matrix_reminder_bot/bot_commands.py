@@ -65,7 +65,7 @@ def _parse_str_to_time(time_str: str, tz_aware: bool = True) -> datetime:
 
     # Disallow times in the past
     tzinfo = pytz.timezone(CONFIG.timezone)
-    if time.replace(tzinfo=tzinfo) < _get_datetime_now(CONFIG.timezone):
+    if tzinfo.localize(time) < _get_datetime_now(CONFIG.timezone):
         raise CommandError(f"The given time '{time_str}' is in the past.")
 
     # Round datetime object to the nearest second for nicer display
