@@ -204,10 +204,8 @@ class Command(object):
 
             return
 
-        # Convert a timedelta to a formatted time (ex. May 25 2020, 01:31)
-        start_time = reminder.start_time.replace(
-            tzinfo=pytz.timezone(reminder.timezone)
-        )
+        # Convert a datetime to a formatted time (ex. May 25 2020, 01:31)
+        start_time = pytz.timezone(reminder.timezone).localize(reminder.start_time)
         human_readable_start_time = start_time.strftime("%b %d %Y, %H:%M")
 
         # Get a textual representation of who will be notified by this reminder
