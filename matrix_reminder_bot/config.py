@@ -200,7 +200,7 @@ class Config:
             ConfigError: If required is specified and the object is not found
                 (and there is no default value provided), this error will be raised
         """
-        # Sift through the the config until we reach our option
+        # Sift through the config until we reach our option
         config = self.config
         for name in path:
             config = config.get(name)
