@@ -42,7 +42,7 @@ setup(
         "pretty_cron>=1.2.0",
     ],
     extras_require={
-        "postgres": ["psycopg2>=2.8.5"],
+        "postgres": ["psycopg2>=2.9.9"],
         "dev": [
             "isort==5.13.2",
             "flake8==7.0.0",
