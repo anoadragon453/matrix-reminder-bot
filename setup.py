@@ -37,7 +37,7 @@ setup(
         "dateparser>=1.2.0",
         "readabledelta>=0.0.2",
         "apscheduler>=3.10.4",
-        "pytz>=2020.1",
+        "pytz>=2024.1",
         "arrow>=0.17.0",
         "pretty_cron>=1.2.0",
     ],
