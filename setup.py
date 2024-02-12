@@ -34,7 +34,7 @@ setup(
         "matrix-nio[e2e]>=0.24.0",
         "Markdown>=3.5.2",
         "PyYAML>=6.0.1",
-        "dateparser>=0.7.4",
+        "dateparser>=1.2.0",
         "readabledelta>=0.0.2",
         "apscheduler>=3.6.3",
         "pytz>=2020.1",
