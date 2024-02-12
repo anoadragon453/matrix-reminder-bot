@@ -38,7 +38,7 @@ setup(
         "readabledelta>=0.0.2",
         "apscheduler>=3.10.4",
         "pytz>=2024.1",
-        "arrow>=0.17.0",
+        "arrow>=1.3.0",
         "pretty_cron>=1.2.0",
     ],
     extras_require={
