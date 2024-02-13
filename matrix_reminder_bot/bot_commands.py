@@ -23,6 +23,57 @@ from matrix_reminder_bot.storage import Storage
 logger = logging.getLogger(__name__)
 
 
+def _get_datetime_now(tz: str) -> datetime:
+    """Returns a timezone-aware datetime object of the current time"""
+    # Get a datetime with no timezone information
+    no_timezone_datetime = datetime(2009, 9, 1)
+
+    # Create a datetime.timezone object with the correct offset from UTC
+    offset = timezone(pytz.timezone(tz).utcoffset(no_timezone_datetime))
+
+    # Get datetime.now with that offset
+    now = datetime.now(offset)
+
+    # Round to the nearest second for nicer display
+    return now.replace(microsecond=0)
+
+
+def _parse_str_to_time(time_str: str, tz_aware: bool = True) -> datetime:
+    """Converts a human-readable, future time string to a datetime object
+
+    Args:
+        time_str: The time to convert
+        tz_aware: Whether the returned datetime should have associated timezone
+            information
+
+    Returns:
+        datetime: A datetime if conversion was successful
+
+    Raises:
+        CommandError: if conversion was not successful, or time is in the past.
+    """
+    time = dateparser.parse(
+        time_str,
+        settings={
+            "PREFER_DATES_FROM": "future",
+            "TIMEZONE": CONFIG.timezone,
+            "RETURN_AS_TIMEZONE_AWARE": tz_aware,
+        },
+    )
+    if not time:
+        raise CommandError(f"The given time '{time_str}' is invalid.")
+
+    # Disallow times in the past
+    tzinfo = pytz.timezone(CONFIG.timezone)
+    if time.replace(tzinfo=tzinfo) < _get_datetime_now(CONFIG.timezone):
+        raise CommandError(f"The given time '{time_str}' is in the past.")
+
+    # Round datetime object to the nearest second for nicer display
+    time = time.replace(microsecond=0)
+
+    return time
+
+
 class Command(object):
     def __init__(
         self,
@@ -115,11 +166,11 @@ class Command(object):
             logger.debug("Got recurring time: %s", recurse_time_str)
 
             # Convert the recurse time to a datetime object
-            recurse_time = self._parse_str_to_time(recurse_time_str)
+            recurse_time = _parse_str_to_time(recurse_time_str)
 
             # Generate a timedelta between now and the recurring time
             # `recurse_time` is guaranteed to always be in the future
-            current_time = self._get_datetime_now(CONFIG.timezone)
+            current_time = _get_datetime_now(CONFIG.timezone)
 
             recurse_timedelta = recurse_time - current_time
             logger.debug("Recurring timedelta: %s", recurse_timedelta)
@@ -134,58 +185,9 @@ class Command(object):
             logger.debug("Start time: %s", time_str)
 
         # Convert start time string to a datetime object
-        time = self._parse_str_to_time(time_str, tz_aware=False)
+        time = _parse_str_to_time(time_str, tz_aware=False)
 
         return time, reminder_text, recurse_timedelta
-
-    def _parse_str_to_time(self, time_str: str, tz_aware: bool = True) -> datetime:
-        """Converts a human-readable, future time string to a datetime object
-
-        Args:
-            time_str: The time to convert
-            tz_aware: Whether the returned datetime should have associated timezone
-                information
-
-        Returns:
-            datetime: A datetime if conversion was successful
-
-        Raises:
-            CommandError: if conversion was not successful, or time is in the past.
-        """
-        time = dateparser.parse(
-            time_str,
-            settings={
-                "PREFER_DATES_FROM": "future",
-                "TIMEZONE": CONFIG.timezone,
-                "RETURN_AS_TIMEZONE_AWARE": tz_aware,
-            },
-        )
-        if not time:
-            raise CommandError(f"The given time '{time_str}' is invalid.")
-
-        # Disallow times in the past
-        tzinfo = pytz.timezone(CONFIG.timezone)
-        if time.replace(tzinfo=tzinfo) < self._get_datetime_now(CONFIG.timezone):
-            raise CommandError(f"The given time '{time_str}' is in the past.")
-
-        # Round datetime object to the nearest second for nicer display
-        time = time.replace(microsecond=0)
-
-        return time
-
-    def _get_datetime_now(self, tz: str) -> datetime:
-        """Returns a timezone-aware datetime object of the current time"""
-        # Get a datetime with no timezone information
-        no_timezone_datetime = datetime(2009, 9, 1)
-
-        # Create a datetime.timezone object with the correct offset from UTC
-        offset = timezone(pytz.timezone(tz).utcoffset(no_timezone_datetime))
-
-        # Get datetime.now with that offset
-        now = datetime.now(offset)
-
-        # Round to the nearest second for nicer display
-        return now.replace(microsecond=0)
 
     async def _confirm_reminder(self, reminder: Reminder):
         """Sends a message to the room confirming the reminder is set
@@ -358,7 +360,6 @@ class Command(object):
     @command_syntax("[<reminder text>]")
     async def _silence(self):
         """Silences an ongoing alarm"""
-        alarm_job = None
 
         # Attempt to find a reminder with an alarm currently going off
         reminder_text = " ".join(self.args)
