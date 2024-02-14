@@ -14,6 +14,7 @@ from nio import (
     LoginError,
     MegolmEvent,
     RoomMessageText,
+    WhoamiError,
 )
 
 from matrix_reminder_bot.callbacks import Callbacks
@@ -89,6 +90,18 @@ async def main():
                         device_id=CONFIG.device_id,
                         access_token=CONFIG.access_token,
                     )
+
+                    whoami_response = await client.whoami()
+
+                    # Check if whoami failed. Usually invalid access token passed
+                    if type(whoami_response) is WhoamiError:
+                        logger.fatal(
+                            f"whoami returned an error: {whoami_response.message}"
+                        )
+                        logger.fatal("your access_token is likely wrong")
+                        return False
+
+                    assert whoami_response.device_id == CONFIG.device_id
                 else:
                     # should be enforced by config.py anyway
                     assert False, "login_type must be either password or token"
