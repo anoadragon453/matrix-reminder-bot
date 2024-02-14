@@ -126,12 +126,13 @@ class Config:
         self.user_password = self._get_cfg(["matrix", "user_password"], required=False)
         self.access_token = self._get_cfg(["matrix", "access_token"], required=False)
         if self.login_type not in ("password", "token"):
-            raise ConfigError("invalid login_type, must be either `password` or `token`")
+            raise ConfigError(
+                "invalid login_type, must be either `password` or `token`"
+            )
         if self.login_type == "password" and not self.user_password:
             raise ConfigError("login_type set to password but no user_password given")
         if self.login_type == "token" and not self.access_token:
             raise ConfigError("login_type set to token but no access_token given")
-
 
         self.device_id = self._get_cfg(["matrix", "device_id"], required=True)
         self.device_name = self._get_cfg(
