@@ -9,13 +9,18 @@ command_prefix: "!"
 matrix:
   # The Matrix User ID of the bot account
   user_id: "@bot:example.com"
-  # Matrix account password
+  # Login type (can be `password` or `token`)
+  login_type: token
+  # Matrix account password (if password login)
   user_password: ""
+  # Authenticate directly to Matrix (if token login)
+  access_token: "syt_blablablabla"
   # The public URL at which the homeserver's Client-Server API can be accessed
   homeserver_url: https://example.com
   # The device ID that is a **non pre-existing** device
   # If this device ID already exists, messages will be dropped silently in
   # encrypted rooms
+  # (if using token login type, request the token with this device_id)
   device_id: REMINDER
   # What to name the logged in device
   device_name: Reminder Bot

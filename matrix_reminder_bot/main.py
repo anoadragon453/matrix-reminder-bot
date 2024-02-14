@@ -65,21 +65,33 @@ async def main():
     # Keep trying to reconnect on failure (with some time in-between)
     while True:
         try:
-            # Try to login with the configured username/password
+            # Try to login
             try:
-                login_response = await client.login(
-                    password=CONFIG.user_password,
-                    device_name=CONFIG.device_name,
-                )
+                # ... with the configured username/password
+                if CONFIG.login_type == "password":
+                    login_response = await client.login(
+                        password=CONFIG.user_password,
+                        device_name=CONFIG.device_name,
+                    )
 
-                # Check if login failed. Usually incorrect password
-                if type(login_response) is LoginError:
-                    logger.error("Failed to login: %s", login_response.message)
-                    logger.warning("Trying again in 15s...")
+                    # Check if login failed. Usually incorrect password
+                    if type(login_response) is LoginError:
+                        logger.error("Failed to login: %s", login_response.message)
+                        logger.warning("Trying again in 15s...")
 
-                    # Sleep so we don't bombard the server with login requests
-                    sleep(15)
-                    continue
+                        # Sleep so we don't bombard the server with login requests
+                        sleep(15)
+                        continue
+                # ... by using an existing access token
+                elif CONFIG.login_type == "token":
+                    client.restore_login(
+                        user_id=CONFIG.user_id,
+                        device_id=CONFIG.device_id,
+                        access_token=CONFIG.access_token,
+                    )
+                else:
+                    # should be enforced by config.py anyway
+                    assert False, "login_type must be either password or token"
             except LocalProtocolError as e:
                 # There's an edge case here where the user hasn't installed the correct C
                 # dependencies. In that case, a LocalProtocolError is raised on login.

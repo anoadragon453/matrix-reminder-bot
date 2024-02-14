@@ -2,7 +2,7 @@ import logging
 import os
 import re
 import sys
-from typing import Any, List
+from typing import Any, List, Literal
 
 import yaml
 
@@ -33,7 +33,9 @@ class Config:
         self.store_path: str = ""
 
         self.user_id: str = ""
+        self.login_type: Literal["password", "token"] = "password"
         self.user_password: str = ""
+        self.access_token: str = ""
         self.device_id: str = ""
         self.device_name: str = ""
         self.homeserver_url: str = ""
@@ -116,7 +118,21 @@ class Config:
             raise ConfigError("matrix.user_id must be in the form @name:domain")
         self.user_id = user_id
 
-        self.user_password = self._get_cfg(["matrix", "user_password"], required=True)
+        # Determine login type
+        self.login_type = self._get_cfg(["matrix", "login_type"])
+        # Make it a non-breaking change by allowing nothing to be treated as password
+        if not self.login_type:
+            self.login_type = "password"
+        self.user_password = self._get_cfg(["matrix", "user_password"], required=False)
+        self.access_token = self._get_cfg(["matrix", "access_token"], required=False)
+        if self.login_type not in ("password", "token"):
+            raise ConfigError("invalid login_type, must be either `password` or `token`")
+        if self.login_type == "password" and not self.user_password:
+            raise ConfigError("login_type set to password but no user_password given")
+        if self.login_type == "token" and not self.access_token:
+            raise ConfigError("login_type set to token but no access_token given")
+
+
         self.device_id = self._get_cfg(["matrix", "device_id"], required=True)
         self.device_name = self._get_cfg(
             ["matrix", "device_name"], default="nio-template"
