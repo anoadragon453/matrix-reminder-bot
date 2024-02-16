@@ -65,7 +65,7 @@ def _parse_str_to_time(time_str: str, tz_aware: bool = True) -> datetime:
 
     # Disallow times in the past
     tzinfo = pytz.timezone(CONFIG.timezone)
-    if time.replace(tzinfo=tzinfo) < _get_datetime_now(CONFIG.timezone):
+    if tzinfo.localize(time) < _get_datetime_now(CONFIG.timezone):
         raise CommandError(f"The given time '{time_str}' is in the past.")
 
     # Round datetime object to the nearest second for nicer display
@@ -204,10 +204,8 @@ class Command(object):
 
             return
 
-        # Convert a timedelta to a formatted time (ex. May 25 2020, 01:31)
-        start_time = reminder.start_time.replace(
-            tzinfo=pytz.timezone(reminder.timezone)
-        )
+        # Convert a datetime to a formatted time (ex. May 25 2020, 01:31)
+        start_time = pytz.timezone(reminder.timezone).localize(reminder.start_time)
         human_readable_start_time = start_time.strftime("%b %d %Y, %H:%M")
 
         # Get a textual representation of who will be notified by this reminder
