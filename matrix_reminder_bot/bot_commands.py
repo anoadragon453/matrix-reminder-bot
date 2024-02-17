@@ -396,7 +396,9 @@ class Command(object):
                         1
                     ].capitalize()  # normalize the text a bit
 
-                    await self._remove_and_silence_alarm(reminder.alarm_job, reminder_text)
+                    await self._remove_and_silence_alarm(
+                        reminder.alarm_job, reminder_text
+                    )
                     text = f"Alarm '{reminder_text}' silenced."
 
                     # Prevent the `else` clause from being triggered
