@@ -48,6 +48,7 @@ setup(
             "flake8==7.0.0",
             "flake8-comprehensions==3.14.0",
             "black==24.2.0",
+            "pytest>=8.0.0",
         ],
     },
     classifiers=[
