@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import arrow
 import dateparser
@@ -366,7 +366,7 @@ class Command(object):
         reminder_text = " ".join(self.args)
         if reminder_text:
             # Find the alarm job via its reminder text
-            alarm_job = ALARMS.get((self.room.room_id, reminder_text.upper()))
+            alarm_job = ALARMS.get((self.room.room_id, reminder_text.upper())).alarm_job
 
             if alarm_job:
                 await self._remove_and_silence_alarm(alarm_job, reminder_text)
@@ -389,14 +389,14 @@ class Command(object):
         else:
             # No reminder text provided. Check if there's a reminder currently firing
             # in the room instead then
-            for alarm_info, job in ALARMS.items():
+            for alarm_info, reminder in ALARMS.items():
                 if alarm_info[0] == self.room.room_id:
                     # Found one!
                     reminder_text = alarm_info[
                         1
                     ].capitalize()  # normalize the text a bit
 
-                    await self._remove_and_silence_alarm(job, reminder_text)
+                    await self._remove_and_silence_alarm(reminder.alarm_job, reminder_text)
                     text = f"Alarm '{reminder_text}' silenced."
 
                     # Prevent the `else` clause from being triggered
@@ -422,6 +422,10 @@ class Command(object):
 
         Sends a message listing them in the following format, using the alarm clock emoji ⏰ to indicate an alarm:
 
+            ⏰ Firing Alarms
+
+            * [🔁 every <recurring time>;] <start time>; <reminder text>
+
             1️⃣ One-time Reminders
 
             * [⏰] <start time>: <reminder text>
@@ -440,9 +444,17 @@ class Command(object):
         """
         output = ""
 
-        cron_reminder_lines = []
-        one_shot_reminder_lines = []
-        interval_reminder_lines = []
+        cron_reminder_lines: List = []
+        one_shot_reminder_lines: List = []
+        interval_reminder_lines: List = []
+        firing_alarms_lines: List = []
+
+        for alarm in ALARMS.values():
+            line = "- "
+            if isinstance(alarm.job.trigger, IntervalTrigger):
+                line += f"🔁 every {readabledelta(alarm.recurse_timedelta)}; "
+            line += f'"*{alarm.reminder_text}*"'
+            firing_alarms_lines.append(line)
 
         # Sort the reminder types
         for reminder in REMINDERS.values():
@@ -461,13 +473,8 @@ class Command(object):
             next_execution = reminder.job.next_run_time
             next_execution = arrow.get(next_execution)
 
-            # Cron-based reminders
-            if isinstance(reminder.job.trigger, CronTrigger):
-                # A human-readable cron tab, in addition to the actual tab
-                line += f"{prettify_cron(reminder.cron_tab)} (`{reminder.cron_tab}`); next run {next_execution.humanize()}"
-
             # One-time reminders
-            elif isinstance(reminder.job.trigger, DateTrigger):
+            if isinstance(reminder.job.trigger, DateTrigger):
                 # Just print when the reminder will go off
                 line += f"{next_execution.humanize()}"
 
@@ -476,22 +483,28 @@ class Command(object):
                 # Print the interval, and when it will next go off
                 line += f"every {readabledelta(reminder.recurse_timedelta)}; next run {next_execution.humanize()}"
 
+            # Cron-based reminders
+            elif isinstance(reminder.job.trigger, CronTrigger):
+                # A human-readable cron tab, in addition to the actual tab
+                line += f"{prettify_cron(reminder.cron_tab)} (`{reminder.cron_tab}`); next run {next_execution.humanize()}"
+
             # Add the reminder's text
             line += f'; *"{reminder.reminder_text}"*'
 
             # Output the status of each reminder. We divide up the reminders by type in order
             # to show them in separate sections, and display them differently
-            if isinstance(reminder.job.trigger, CronTrigger):
-                cron_reminder_lines.append(line)
-            elif isinstance(reminder.job.trigger, DateTrigger):
+            if isinstance(reminder.job.trigger, DateTrigger):
                 one_shot_reminder_lines.append(line)
             elif isinstance(reminder.job.trigger, IntervalTrigger):
                 interval_reminder_lines.append(line)
+            elif isinstance(reminder.job.trigger, CronTrigger):
+                cron_reminder_lines.append(line)
 
         if (
-            not one_shot_reminder_lines
-            and not cron_reminder_lines
+            not firing_alarms_lines
+            and not one_shot_reminder_lines
             and not interval_reminder_lines
+            and not cron_reminder_lines
         ):
             await send_text_to_room(
                 self.client,
@@ -500,17 +513,21 @@ class Command(object):
             )
             return
 
+        if firing_alarms_lines:
+            output += "\n\n" + "**⏰ Firing Alarms**" + "\n\n"
+            output += "\n".join(firing_alarms_lines)
+
         if one_shot_reminder_lines:
             output += "\n\n" + "**1️⃣ One-time Reminders**" + "\n\n"
             output += "\n".join(one_shot_reminder_lines)
 
-        if cron_reminder_lines:
-            output += "\n\n" + "**📅 Cron Reminders**" + "\n\n"
-            output += "\n".join(cron_reminder_lines)
-
         if interval_reminder_lines:
             output += "\n\n" + "**🔁 Repeating Reminders**" + "\n\n"
             output += "\n".join(interval_reminder_lines)
+
+        if cron_reminder_lines:
+            output += "\n\n" + "**📅 Cron Reminders**" + "\n\n"
+            output += "\n".join(cron_reminder_lines)
 
         await send_text_to_room(self.client, self.room.room_id, output)
 
@@ -531,7 +548,10 @@ class Command(object):
             # Cancel the reminder and associated alarms
             reminder.cancel()
 
-            text = "Reminder cancelled."
+            text = "Reminder"
+            if reminder.alarm:
+                text = "Alarm"
+            text += f' "*{reminder_text}*" cancelled.'
         else:
             text = f"Unknown reminder '{reminder_text}'."
 
