@@ -339,7 +339,7 @@ class Command(object):
         await self._remind(target=self.event.sender)
 
     async def _insufficient_room_ping_pl(self):
-        room_ping_pl = self.room.power_levels.defaults.notifications.get('room')
+        room_ping_pl = self.room.power_levels.defaults.notifications.get("room")
         sender_pl = self.room.power_levels.users.get(self.event.sender, 0)
         bot_pl = self.room.power_levels.users.get(self.client.user_id, 0)
         if sender_pl < room_ping_pl:
