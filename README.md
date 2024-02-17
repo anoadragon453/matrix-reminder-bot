@@ -175,6 +175,14 @@ the reminder text:
 !remindroom every 5m; 1m; you are loved
 ```
 
+Common intervals and their short forms include [s]econds, [m]inutes, [h]ours, [d]ays, [w]eeks.
+
+> [!NOTE]
+> The bot does only understand constant intervals and their short forms.
+> Wording like "every Monday" is currently not supported using the "every"-syntax.
+> Intervals that have varying lengths like months are also not properly supported using the "every"-syntax ([#45](https://github.com/anoadragon453/matrix-reminder-bot/issues/45)).
+> You will need to use cron-style reminders for these more complex cases.
+
 ### Cron-style reminders
 
 If you need more complicated functionality for your reminder's
