@@ -41,7 +41,7 @@ You can install [libolm](https://gitlab.matrix.org/matrix-org/olm) from source,
 or alternatively, check your system's package manager. Version `3.0.0` or
 greater is required. Version `3.2.16` or greater is required with Python 3.12.
 
-**(Optional) postgres development headers**
+#### (Optional) Postgres development headers
 
 By default, matrix-reminder-bot uses SQLite as its storage backend. This is
 fine for a few hundred users, but if you plan to support a much higher volume
@@ -93,8 +93,10 @@ cp sample.config.yaml config.yaml
 ```
 
 Edit the config file. The `matrix` section must be modified at least.
+We recommend to also set your `timezone` in the `reminders` section and
+to review the `allowlist` and `blocklist` settings.
 
-#### (Optional) Set up a Postgres database
+### (Optional) Set up a Postgres database
 
 Create a postgres user and database for matrix-reminder-bot:
 
@@ -140,7 +142,15 @@ matrix-reminder-bot other-config.yaml
 
 ## Usage
 
-Invite the bot to a room and it should accept the invite and join.
+Invite the bot to a room, and it should accept the invite and join.
+
+### Help
+
+Use the help command to get a summary of all bot commands, including their short forms.
+
+```
+!help reminders
+```
 
 ### Setting a reminder
 
@@ -155,7 +165,7 @@ Have the bot ping you in the room about something:
 * `<reminder text>` is the text that the bot will remind you with.
 
 Have the bot ping you and everyone else in the room about something
-(assuming the bot has permissions to do so):
+(assuming the bot has permissions to do so - by default the bot needs the moderator power level for this):
 
 ```
 !remindroom <time>; <reminder text>
@@ -185,11 +195,11 @@ Common intervals and their short forms include [s]econds, [m]inutes, [h]ours, [d
 
 ### Cron-style reminders
 
-If you need more complicated functionality for your reminder's
+If you need complexer functionality for your recurring reminder's
 timing, you can make use of cron tabs. You can read a guide on
 cron tabs [here](https://www.adminschoice.com/crontab-quick-reference).
 
-In short they allow you to execute more complicated, recurring
+In short, they allow you to execute more complicated, recurring
 reminders, such as those that should only fire during weekdays.
 
 ```
@@ -214,9 +224,9 @@ until 6:30pm, and only on Monday, Wednesday and Friday.
 This will output a list of reminders and when they will fire next:
 
 ```
-sometime Do the dishes (every 1d)
-sometime Take out the trash
-sometime Send email to Grandma
+- <time>; Do the dishes (every 1d)
+- <time>; Take out the trash
+- <time>; Send email to Grandma
 ```
 
 ### Cancel a reminder
