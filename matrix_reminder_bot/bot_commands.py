@@ -464,7 +464,12 @@ class Command(object):
             # Cron-based reminders
             if isinstance(reminder.job.trigger, CronTrigger):
                 # A human-readable cron tab, in addition to the actual tab
-                line += f"{prettify_cron(reminder.cron_tab)} (`{reminder.cron_tab}`); next run {next_execution.humanize()}"
+                human_cron = prettify_cron(reminder.cron_tab)
+                if human_cron != reminder.cron_tab:
+                    line += f"{human_cron} (`{reminder.cron_tab}`)"
+                else:
+                    line += f"`Every {reminder.cron_tab}`"
+                line += f"; next run {next_execution.humanize()}"
 
             # One-time reminders
             elif isinstance(reminder.job.trigger, DateTrigger):
