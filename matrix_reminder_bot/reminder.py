@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 from typing import Dict, Optional, Tuple
 
 import pytz
-from apscheduler.job import Job
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
@@ -126,7 +125,7 @@ class Reminder(object):
                         seconds=int(timedelta_seconds(ALARM_TIMEDELTA)),
                     ),
                 )
-                ALARMS[(self.room_id, self.reminder_text.upper())] = self.alarm_job
+                ALARMS[(self.room_id, self.reminder_text.upper())] = self
 
         # Send the message to the room
         await send_text_to_room(
@@ -203,4 +202,4 @@ class Reminder(object):
 # reminder_text should be accessed and stored as uppercase in order to
 # allow for case-insensitive matching when carrying out user actions
 REMINDERS: Dict[Tuple[str, str], Reminder] = {}
-ALARMS: Dict[Tuple[str, str], Job] = {}
+ALARMS: Dict[Tuple[str, str], Reminder] = {}
