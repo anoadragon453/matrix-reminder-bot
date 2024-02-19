@@ -474,7 +474,6 @@ class Command(object):
             # Print the duration before (next) execution
             next_execution = reminder.job.next_run_time
             next_execution = arrow.get(next_execution)
-
             # One-time reminders
             if isinstance(reminder.job.trigger, DateTrigger):
                 # Just print when the reminder will go off
@@ -488,7 +487,12 @@ class Command(object):
             # Cron-based reminders
             elif isinstance(reminder.job.trigger, CronTrigger):
                 # A human-readable cron tab, in addition to the actual tab
-                line += f"{prettify_cron(reminder.cron_tab)} (`{reminder.cron_tab}`); next run {next_execution.humanize()}"
+                human_cron = prettify_cron(reminder.cron_tab)
+                if human_cron != reminder.cron_tab:
+                    line += f"{human_cron} (`{reminder.cron_tab}`)"
+                else:
+                    line += f"`Every {reminder.cron_tab}`"
+                line += f"; next run {next_execution.humanize()}"
 
             # Add the reminder's text
             line += f'; *"{reminder.reminder_text}"*'
