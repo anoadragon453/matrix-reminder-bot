@@ -116,7 +116,10 @@ class Config:
             raise ConfigError("matrix.user_id must be in the form @name:domain")
         self.user_id = user_id
 
-        self.user_password = self._get_cfg(["matrix", "user_password"], required=True)
+        user_password = self._get_cfg(["matrix", "user_password"], required=True)
+        if len(user_password) <= 0:
+            raise ConfigError("please supply a password to log in!")
+        self.user_password = user_password
         self.device_id = self._get_cfg(["matrix", "device_id"], required=True)
         self.device_name = self._get_cfg(
             ["matrix", "device_name"], default="nio-template"

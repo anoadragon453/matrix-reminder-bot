@@ -65,7 +65,7 @@ async def main():
     # Keep trying to reconnect on failure (with some time in-between)
     while True:
         try:
-            # Try to login with the configured username/password
+            # Try to log in with the configured username/password
             try:
                 login_response = await client.login(
                     password=CONFIG.user_password,
