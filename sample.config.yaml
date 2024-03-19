@@ -50,7 +50,7 @@ allowlist:
   regexes: []
 
 # Prevent the bot from responding to certain MXIDs
-# If both allowlist and blocklist are enabled, blocklist entries takes precedence
+# If both allowlist and blocklist are enabled, blocklist entries take precedence
 blocklist:
   # Set to true to enable the blocklist
   enabled: false
