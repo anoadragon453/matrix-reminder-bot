@@ -67,7 +67,7 @@ sudo pacman -S postgresql-libs
 Create and activate a Python 3 virtual environment:
 
 ```
-virtualenv -p python3 env
+python3 -m venv env
 source env/bin/activate
 ```
 
