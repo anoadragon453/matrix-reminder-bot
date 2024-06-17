@@ -45,7 +45,7 @@ setup(
         "postgres": ["psycopg2>=2.9.9"],
         "dev": [
             "isort==5.13.2",
-            "flake8==7.0.0",
+            "flake8==7.1.0",
             "flake8-comprehensions==3.14.0",
             "black==24.4.2",
         ],
