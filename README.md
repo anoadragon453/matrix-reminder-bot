@@ -33,6 +33,11 @@ be aware that they are more complex.
 
 **Recommended.** Follow the docker [installation instructions](docker/README.md#setup).
 
+#### Matrix Docker Ansible Deploy
+
+The [matrix-docker-ansible-deploy](project) supports setting up a whole Matrix stack
+including lots of addons mostly automatically, including Matrix Reminder Bot.
+
 ### Native installation
 
 #### Install libolm
