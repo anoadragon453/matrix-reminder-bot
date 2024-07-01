@@ -246,6 +246,17 @@ An alarm can be silenced with the following command:
 !silence <reminder text>
 ```
 
+### iOS Shortcuts
+
+#### WARNING: These shortcuts will save a Matrix account access token in plain text inside the shortcuts.  Proceed with caution.
+
+iOS Shortcuts have been created to quickly send reminder requests to a room with the reminder bot on your Matrix server.  **These requests will be unencrypted on the server.**
+
+Normal reminder: https://www.icloud.com/shortcuts/f151c91bd766461bafe8f46c71f66404
+
+Cron reminder: https://www.icloud.com/shortcuts/09e5359c076247dabcc9ae788ae37fc7
+
+
 ## Development
 
 Please see [CONTRIBUTING.md](CONTRIBUTING.md).
