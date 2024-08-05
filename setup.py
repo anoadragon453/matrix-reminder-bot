@@ -47,7 +47,7 @@ setup(
             "isort==5.13.2",
             "flake8==7.1.0",
             "flake8-comprehensions==3.15.0",
-            "black==24.4.2",
+            "black==24.8.0",
         ],
     },
     classifiers=[
