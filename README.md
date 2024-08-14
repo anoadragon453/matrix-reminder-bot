@@ -249,3 +249,15 @@ An alarm can be silenced with the following command:
 ## Development
 
 Please see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Related
+- https://github.com/maubot/reminder (Maubot, Python)
+- https://github.com/cromo/mx-timer-bot (TypeScript)
+- https://github.com/CubicrootXYZ/RemindMe (Golang)
+- https://github.com/ilikeorangutans/jarvis (Golang)
+- https://github.com/erikjohnston/reminderbot (Rust)
+- https://github.com/dfuchss/YARB (Kotlin)
+- https://github.com/turt2live/matrix-ics-bot (ical, TypeScript)
+- https://gitlab.com/uhoreg/matrix_daily_calendar (CalDAV, Python)
+- https://github.com/matrix-org/matrix-hookshot (Atom/RSS/Webhooks, TypeScript)
+- https://github.com/matrix-org/go-neb (Atom/RSS, Golang)
