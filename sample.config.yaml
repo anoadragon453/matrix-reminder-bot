@@ -8,11 +8,11 @@ command_prefix: "!"
 # Options for connecting to the bot's Matrix account
 matrix:
   # The Matrix User ID of the bot account
-  user_id: "@bot:example.com"
+  user_id: "@bot:example.org"
   # Matrix account password
   user_password: ""
   # The public URL at which the homeserver's Client-Server API can be accessed
-  homeserver_url: https://example.com
+  homeserver_url: https://example.org
   # The device ID that is a **non pre-existing** device
   # If this device ID already exists, messages will be dropped silently in
   # encrypted rooms
