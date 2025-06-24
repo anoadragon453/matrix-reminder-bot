@@ -341,8 +341,25 @@ class Command(object):
         """Set a reminder that will remind only the user who created it"""
         await self._remind(target=self.event.sender)
 
+    async def _insufficient_room_ping_pl(self):
+        room_ping_pl = self.room.power_levels.defaults.notifications.get("room")
+        sender_pl = self.room.power_levels.users.get(self.event.sender, 0)
+        bot_pl = self.room.power_levels.users.get(self.client.user_id, 0)
+        if sender_pl < room_ping_pl:
+            insufficient = f"You (<code>{sender_pl}</code>) do"
+        elif bot_pl < room_ping_pl:
+            insufficient = f"The bot (<code>{bot_pl}</code>) does"
+
+        if insufficient is not None:
+            text = f"Insufficient rights: {insufficient} not have the required power level to ping the whole room (<code>{room_ping_pl}</code>)."
+            await send_text_to_room(self.client, self.room.room_id, text)
+            return True
+
     @command_syntax("[every <recurring time>;] <start time>; <reminder text>")
     async def _remind_room(self):
+        if await self._insufficient_room_ping_pl():
+            return
+
         """Set a reminder that will mention the room that the reminder was created in"""
         await self._remind()
 
