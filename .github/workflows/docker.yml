@@ -9,7 +9,6 @@ on:
   pull_request:
 
 env:
-  GITHUB_REPO: anoadragon453/matrix-reminder-bot
   GHCR_IMAGE: ghcr.io/anoadragon453/matrix-reminder-bot
   HUB_IMAGE: anoa/matrix-reminder-bot
 
@@ -49,7 +48,7 @@ jobs:
       packages: write
     outputs:
       docker-tag: ${{ steps.meta.outputs.version }}
-    if: ${{ github.repository == env.GITHUB_REPO }}
+    if: ${{ github.repository == 'anoadragon453/matrix-reminder-bot' }}
     steps:
       - uses: actions/checkout@v5
 
@@ -95,7 +94,7 @@ jobs:
     permissions:
       packages: read
     needs: [ build-push ]
-    if: ${{ github.ref.type == 'tag' && github.repository == env.GITHUB_REPO }}
+    if: ${{ github.ref.type == 'tag' && github.repository == 'anoadragon453/matrix-reminder-bot' }}
     steps:
       - name: Generate Docker metadata
         id: meta
