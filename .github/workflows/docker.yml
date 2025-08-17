@@ -48,6 +48,7 @@ jobs:
       packages: write
     outputs:
       docker-tag: ${{ steps.meta.outputs.version }}
+    if: ${{ github.repository == 'anoadragon453/matrix-reminder-bot' }}
     steps:
       - uses: actions/checkout@v5
 
@@ -93,7 +94,7 @@ jobs:
     permissions:
       packages: read
     needs: [ build-push ]
-    if: ${{ github.ref.type == 'tag' }}
+    if: ${{ github.ref.type == 'tag' && github.repository == 'anoadragon453/matrix-reminder-bot' }}
     steps:
       - name: Generate Docker metadata
         id: meta
