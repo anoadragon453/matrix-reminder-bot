@@ -94,7 +94,7 @@ jobs:
     permissions:
       packages: read
     needs: [ build-push ]
-    if: ${{ github.ref.type == 'tag' && github.repository == 'anoadragon453/matrix-reminder-bot' }}
+    if: ${{ github.ref_type == 'tag' && github.repository == 'anoadragon453/matrix-reminder-bot' }}
     steps:
       - name: Generate Docker metadata
         id: meta
@@ -116,7 +116,9 @@ jobs:
       - name: Docker pull-tag-push
         run: |
           docker pull ${{ env.GHCR_IMAGE }}:${{ needs.build-push.outputs.docker-tag }}
-          for new_tag in $tags  # bourne shell syntax splits string by space
+          IFS=$'\n'  # bourne shell syntax splits string by space
+          tags="${{ steps.meta.outputs.tags }}"
+          for new_tag in $tags
           do
             docker tag ${{ env.GHCR_IMAGE }}:${{ needs.build-push.outputs.docker-tag }} $new_tag
             docker push $new_tag
