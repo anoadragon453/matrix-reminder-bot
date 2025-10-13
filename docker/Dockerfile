@@ -39,7 +39,8 @@ RUN apk add --no-cache \
     git \
     libffi-dev \
     yaml-dev \
-    python3-dev
+    python3-dev \
+    py3-setuptools
 
 # Build libolm
 #
