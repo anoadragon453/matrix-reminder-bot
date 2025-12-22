@@ -17,7 +17,13 @@ from readabledelta import readabledelta
 from matrix_reminder_bot.config import CONFIG
 from matrix_reminder_bot.errors import CommandError, CommandSyntaxError
 from matrix_reminder_bot.functions import command_syntax, send_text_to_room
-from matrix_reminder_bot.reminder import ALARMS, REMINDERS, SCHEDULER, Reminder
+from matrix_reminder_bot.reminder import (
+    ALARMS,
+    REMINDERS,
+    SCHEDULER,
+    Reminder,
+    get_reminders_by_room_id,
+)
 from matrix_reminder_bot.storage import Storage
 
 logger = logging.getLogger(__name__)
@@ -462,13 +468,10 @@ class Command(object):
             firing_alarms_lines.append(line)
 
         # Sort the reminder types
-        for reminder in REMINDERS.values():
-            # Filter out reminders that don't belong to this room
-            if reminder.room_id != self.room.room_id:
-                continue
+        for id, reminder in enumerate(get_reminders_by_room_id(self.room.room_id)):
 
             # Organise alarms into markdown lists
-            line = "- "
+            line = f"- **[{id + 1}]** "
             if reminder.alarm:
                 # Note that an alarm exists if available
                 alarm_clock_emoji = "⏰"

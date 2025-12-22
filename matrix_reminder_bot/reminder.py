@@ -197,6 +197,15 @@ class Reminder(object):
         return self.target_user is not None
 
 
+def get_reminders_by_room_id(room_id: str):
+    """Returns all reminders for a given room id, following a consistent sorting order."""
+
+    return sorted(
+        filter(lambda x: x.room_id == room_id, REMINDERS.values()),
+        key=lambda x: x.creation_timestamp_ms,
+    )
+
+
 # Global dictionaries
 #
 # Both feature (room_id, reminder_text) tuples as keys
