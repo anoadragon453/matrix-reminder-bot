@@ -9,7 +9,7 @@ from nio import AsyncClient
 from matrix_reminder_bot.config import CONFIG
 from matrix_reminder_bot.reminder import REMINDERS, Reminder
 
-latest_migration_version = 3
+latest_migration_version = 4
 
 logger = logging.getLogger(__name__)
 
@@ -270,6 +270,52 @@ class Storage(object):
             )
 
             logger.info("Database migrated to v3")
+
+        if current_migration_version < 4:
+            logger.info("Migrating the database from v3 to v4...")
+
+            # Add a creation timestamp column to have a proper sorting order for reminders
+            self._execute(
+                """
+                ALTER TABLE reminder
+                    ADD COLUMN creation_timestamp_ms INTEGER
+            """
+            )
+
+            # Use the current unix time as the base timestamp for the first reminder in each room
+            now = int(datetime.now().timestamp() * 1000)
+
+            # Fetch a list of room ids
+            self._execute("SELECT room_id FROM reminder GROUP BY room_id")
+            room_ids = map(lambda x: x[0], self.cursor.fetchall())
+
+            for room_id in room_ids:
+                logger.debug("Migrating room %s", room_id)
+
+                # Fetch reminders for the current room
+                self._execute("SELECT text FROM reminder WHERE room_id = ?", (room_id,))
+                texts = map(lambda x: x[0], self.cursor.fetchall())
+
+                # Iterate over the reminders, setting up the creation timestamps at 1 ms intervals
+                offset_ms = 0
+                for text in texts:
+                    self._execute(
+                        """
+                        UPDATE reminder SET creation_timestamp_ms = ?
+                            WHERE room_id = ?
+                            AND text = ?
+                    """,
+                        (now + offset_ms, room_id, text),
+                    )
+                    offset_ms += 1
+
+            self._execute(
+                """
+                 UPDATE migration_version SET version = 4
+            """
+            )
+
+            logger.info("Database migrated to v4")
 
     def _load_reminders(self) -> Dict[Tuple[str, str], Reminder]:
         """Load reminders from the database
