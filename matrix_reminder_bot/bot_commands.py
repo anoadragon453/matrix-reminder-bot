@@ -543,19 +543,39 @@ class Command(object):
 
         await send_text_to_room(self.client, self.room.room_id, output)
 
-    @command_syntax("<reminder text>")
+    @command_syntax("<reminder text> | id <reminder id>")
     async def _delete_reminder(self):
-        """Delete a reminder via its reminder text"""
-        reminder_text = " ".join(self.args)
-        if not reminder_text:
-            raise CommandSyntaxError()
+        """Delete a reminder via its reminder text or ID."""
 
-        logger.debug("Known reminders: %s", REMINDERS)
-        logger.debug(
-            "Deleting reminder in room %s: %s", self.room.room_id, reminder_text
-        )
+        if len(self.args) == 2 and self.args[0] == "id":
+            try:
+                id = int(self.args[1]) - 1
+            except ValueError:
+                raise CommandSyntaxError()
 
-        reminder = REMINDERS.get((self.room.room_id, reminder_text.upper()))
+            reminders = get_reminders_by_room_id(self.room.room_id)
+
+            if len(reminders) - 1 < id or id < 0:
+                await send_text_to_room(
+                    self.client,
+                    self.room.room_id,
+                    f"Unknown reminder ID. See `{CONFIG.command_prefix}lr` for available IDs.",
+                )
+                return
+
+            reminder = reminders[id]
+        else:
+            reminder_text = " ".join(self.args)
+            if not reminder_text:
+                raise CommandSyntaxError()
+
+            logger.debug("Known reminders: %s", REMINDERS)
+            logger.debug(
+                "Deleting reminder in room %s: %s", self.room.room_id, reminder_text
+            )
+
+            reminder = REMINDERS.get((self.room.room_id, reminder_text.upper()))
+
         if reminder:
             # Cancel the reminder and associated alarms
             reminder.cancel()
@@ -563,9 +583,9 @@ class Command(object):
             text = "Reminder"
             if reminder.alarm:
                 text = "Alarm"
-            text += f' "*{reminder_text}*" cancelled.'
+            text += f' "*{reminder.reminder_text}*" cancelled.'
         else:
-            text = f"Unknown reminder '{reminder_text}'."
+            text = f"Unknown reminder '{reminder.reminder_text}'."
 
         await send_text_to_room(self.client, self.room.room_id, text)
 
@@ -615,6 +635,7 @@ Cancel a reminder:
 
 ```
 {c}cancelreminder|cancel|cr|c <reminder text>
+{c}cancelreminder|cancel|cr|c id <reminder id>
 ```
 
 **Alarms**
