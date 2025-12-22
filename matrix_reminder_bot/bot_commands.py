@@ -281,12 +281,15 @@ class Command(object):
             )
             return
 
+        creation_timestamp_ms = int(datetime.now().timestamp() * 1000)
+
         # Create the reminder
         reminder = Reminder(
             self.client,
             self.store,
             self.room.room_id,
             reminder_text,
+            creation_timestamp_ms,
             start_time=start_time,
             timezone=CONFIG.timezone,
             cron_tab=cron_tab,

@@ -46,6 +46,7 @@ class Reminder(object):
         store,
         room_id: str,
         reminder_text: str,
+        creation_timestamp_ms: int,
         start_time: Optional[datetime] = None,
         timezone: Optional[str] = None,
         recurse_timedelta: Optional[timedelta] = None,
@@ -59,6 +60,7 @@ class Reminder(object):
         self.timezone = timezone
         self.start_time = start_time
         self.reminder_text = reminder_text
+        self.creation_timestamp_ms = creation_timestamp_ms
         self.cron_tab = cron_tab
         self.recurse_timedelta = recurse_timedelta
         self.target_user = target_user

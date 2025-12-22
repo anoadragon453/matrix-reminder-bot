@@ -333,7 +333,8 @@ class Storage(object):
                 cron_tab,
                 room_id,
                 target_user,
-                alarm
+                alarm,
+                creation_timestamp_ms
             FROM reminder
         """
         )
@@ -351,6 +352,7 @@ class Storage(object):
             room_id = row[5]
             target_user = row[6]
             alarm = row[7]
+            creation_timestamp_ms = row[8]
 
             if start_time:
                 # If this is a one-off reminder whose start time is in the past, then it will
@@ -384,6 +386,7 @@ class Storage(object):
                 room_id=room_id,
                 target_user=target_user,
                 alarm=alarm,
+                creation_timestamp_ms=creation_timestamp_ms,
             )
 
         return reminders
@@ -412,9 +415,10 @@ class Storage(object):
                 cron_tab,
                 room_id,
                 target_user,
-                alarm
+                alarm,
+                creation_timestamp_ms
             ) VALUES (
-                ?, ?, ?, ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?, ?, ?
             )
         """,
             (
@@ -426,6 +430,7 @@ class Storage(object):
                 reminder.room_id,
                 reminder.target_user,
                 reminder.alarm,
+                reminder.creation_timestamp_ms,
             ),
         )
 
