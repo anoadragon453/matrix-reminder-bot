@@ -287,14 +287,14 @@ class Storage(object):
 
             # Fetch a list of room ids
             self._execute("SELECT room_id FROM reminder GROUP BY room_id")
-            room_ids = map(lambda x: x[0], self.cursor.fetchall())
+            room_ids = (x[0] for x in self.cursor.fetchall())
 
             for room_id in room_ids:
                 logger.debug("Migrating room %s", room_id)
 
                 # Fetch reminders for the current room
                 self._execute("SELECT text FROM reminder WHERE room_id = ?", (room_id,))
-                texts = map(lambda x: x[0], self.cursor.fetchall())
+                texts = (x[0] for x in self.cursor.fetchall())
 
                 # Iterate over the reminders, setting up the creation timestamps at 1 ms intervals
                 offset_ms = 0
