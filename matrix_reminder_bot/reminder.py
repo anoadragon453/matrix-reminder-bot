@@ -197,7 +197,7 @@ class Reminder(object):
         return self.target_user is not None
 
 
-def get_reminders_by_room_id(room_id: str):
+def get_reminders_by_room_id(room_id: str) -> list[Reminder]:
     """Returns all reminders for a given room id, following a consistent sorting order."""
 
     return sorted(
