@@ -548,6 +548,7 @@ class Command(object):
         """Delete a reminder via its reminder text or ID."""
 
         if len(self.args) == 2 and self.args[0] == "id":
+            # Delete by reminder ID
             try:
                 id = int(self.args[1]) - 1
             except ValueError:
@@ -565,27 +566,35 @@ class Command(object):
 
             reminder = reminders[id]
         else:
+            # Delete by reminder text
             reminder_text = " ".join(self.args)
             if not reminder_text:
                 raise CommandSyntaxError()
 
-            logger.debug("Known reminders: %s", REMINDERS)
-            logger.debug(
-                "Deleting reminder in room %s: %s", self.room.room_id, reminder_text
-            )
-
             reminder = REMINDERS.get((self.room.room_id, reminder_text.upper()))
 
-        if reminder:
-            # Cancel the reminder and associated alarms
-            reminder.cancel()
+            if not reminder:
+                await send_text_to_room(
+                    self.client,
+                    self.room.room_id,
+                    f"Unknown reminder '{reminder_text}'.",
+                )
+                return
 
-            text = "Reminder"
-            if reminder.alarm:
-                text = "Alarm"
-            text += f' "*{reminder.reminder_text}*" cancelled.'
-        else:
-            text = f"Unknown reminder '{reminder.reminder_text}'."
+        logger.debug("Known reminders: %s", REMINDERS)
+        logger.debug(
+            "Deleting reminder in room %s: %s",
+            self.room.room_id,
+            reminder.reminder_text,
+        )
+
+        # Cancel the reminder and associated alarms
+        reminder.cancel()
+
+        text = "Reminder"
+        if reminder.alarm:
+            text = "Alarm"
+        text += f' "*{reminder.reminder_text}*" cancelled.'
 
         await send_text_to_room(self.client, self.room.room_id, text)
 
