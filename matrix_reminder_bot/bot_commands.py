@@ -339,7 +339,24 @@ class Command(object):
             "d",
             "c",
         ]:
-            await self._delete_reminder()
+            await self._delete_reminder_by_text()
+        elif self.command in [
+            "delreminderid",
+            "deletereminderid",
+            "removereminderid",
+            "cancelreminderid",
+            "delalarmid",
+            "deletealarmid",
+            "removealarmid",
+            "cancelalarmid",
+            "cancelid",
+            "rmid",
+            "crid",
+            "caid",
+            "did",
+            "cid",
+        ]:
+            await self._delete_reminder_by_id()
         elif self.command in ["silence", "s"]:
             await self._silence()
         elif self.command in ["help", "h"]:
@@ -543,43 +560,55 @@ class Command(object):
 
         await send_text_to_room(self.client, self.room.room_id, output)
 
-    @command_syntax("<reminder text> | id <reminder id>")
-    async def _delete_reminder(self):
-        """Delete a reminder via its reminder text or ID."""
+    @command_syntax("<reminder text>")
+    async def _delete_reminder_by_text(self):
+        """Delete a reminder via its reminder text"""
+        reminder_text = " ".join(self.args)
+        if not reminder_text:
+            raise CommandSyntaxError()
 
-        if len(self.args) == 2 and self.args[0] == "id":
-            # Delete by reminder ID
-            try:
-                id = int(self.args[1]) - 1
-            except ValueError:
-                raise CommandSyntaxError()
+        logger.debug("Known reminders: %s", REMINDERS)
+        logger.debug(
+            "Deleting reminder in room %s: %s", self.room.room_id, reminder_text
+        )
 
-            reminders = get_reminders_by_room_id(self.room.room_id)
+        reminder = REMINDERS.get((self.room.room_id, reminder_text.upper()))
+        if reminder:
+            # Cancel the reminder and associated alarms
+            reminder.cancel()
 
-            if len(reminders) - 1 < id or id < 0:
-                await send_text_to_room(
-                    self.client,
-                    self.room.room_id,
-                    f"Unknown reminder ID. See `{CONFIG.command_prefix}lr` for available IDs.",
-                )
-                return
-
-            reminder = reminders[id]
+            text = "Reminder"
+            if reminder.alarm:
+                text = "Alarm"
+            text += f' "*{reminder_text}*" cancelled.'
         else:
-            # Delete by reminder text
-            reminder_text = " ".join(self.args)
-            if not reminder_text:
-                raise CommandSyntaxError()
+            text = f"Unknown reminder '{reminder_text}'."
 
-            reminder = REMINDERS.get((self.room.room_id, reminder_text.upper()))
+        await send_text_to_room(self.client, self.room.room_id, text)
 
-            if not reminder:
-                await send_text_to_room(
-                    self.client,
-                    self.room.room_id,
-                    f"Unknown reminder '{reminder_text}'.",
-                )
-                return
+
+    @command_syntax("<reminder id>")
+    async def _delete_reminder_by_id(self):
+        """Delete a reminder via its ID."""
+        if len(self.args) != 1:
+            raise CommandSyntaxError()
+
+        try:
+            id = int(self.args[0]) - 1
+        except ValueError:
+            raise CommandSyntaxError()
+
+        reminders = get_reminders_by_room_id(self.room.room_id)
+
+        if len(reminders) - 1 < id or id < 0:
+            await send_text_to_room(
+                self.client,
+                self.room.room_id,
+                f"Unknown reminder ID. See `{CONFIG.command_prefix}lr` for available IDs.",
+            )
+            return
+
+        reminder = reminders[id]
 
         logger.debug("Known reminders: %s", REMINDERS)
         logger.debug(
@@ -640,11 +669,16 @@ List all active reminders for a room:
 {c}listreminders|list|lr|l
 ```
 
-Cancel a reminder:
+Cancel a reminder by text:
 
 ```
 {c}cancelreminder|cancel|cr|c <reminder text>
-{c}cancelreminder|cancel|cr|c id <reminder id>
+```
+
+Cancel a reminder by ID (see `!lr`):
+
+```
+{c}cancelreminderid|cancelid|crid|cid <ID>
 ```
 
 **Alarms**
