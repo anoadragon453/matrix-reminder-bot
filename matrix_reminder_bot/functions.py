@@ -105,7 +105,8 @@ def command_syntax(syntax: str):
                 # command's name from the `self` object passed to the command
                 text = (
                     f"Invalid syntax. Please use "
-                    f"`{CONFIG.command_prefix}{self.command} {syntax}`."
+                    f"`{CONFIG.command_prefix}{self.command} {syntax}`. "
+                    f"Use `!help reminders` to see all help."
                 )
                 await send_text_to_room(self.client, self.room.room_id, text)
 
