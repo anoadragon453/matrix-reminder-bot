@@ -634,14 +634,21 @@ Once firing, an alarm can be silenced with:
 
 **Cron-tab Syntax**
 
-If you need more complicated recurring reminders, you can make use of
-cron-tab syntax:
+If you need complexer recurring reminders, you can make use of cron-tab syntax:
 
 ```
 {c}remindme|remind|r cron <min> <hour> <day of month> <month> <day of week>; <reminder text>
 ```
 
 This syntax is supported by any `{c}remind...` or `{c}alarm...` command above.
+
+**Help**
+
+```
+!help reminders
+```
+
+Prints this help message.
 """
         else:
             # Unknown help topic
