@@ -5,7 +5,6 @@ from typing import List, Optional, Tuple
 import arrow
 import dateparser
 import pytz
-from apscheduler.job import Job
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
@@ -99,6 +98,7 @@ class Command(object):
         self.store = store
         self.room = room
         self.event = event
+        self.replied_to_event_id = self._extract_replied_to_event_id()
 
         msg_without_prefix = command[
             len(CONFIG.command_prefix) :
@@ -110,7 +110,29 @@ class Command(object):
             0
         )  # Remove the first item and save as the command (ex. `remindme`)
 
-    def _parse_reminder_command_args_for_cron(self) -> Tuple[str, str]:
+    def _extract_replied_to_event_id(self) -> Optional[str]:
+        """Attempt to load the event ID this command is replying to, if any."""
+        source = getattr(self.event, "source", {}) or {}
+        if not isinstance(source, dict):
+            return None
+
+        content = source.get("content", {}) or {}
+        if not isinstance(content, dict):
+            return None
+
+        relates_to = content.get("m.relates_to", {}) or {}
+        if not isinstance(relates_to, dict):
+            return None
+
+        in_reply_to = relates_to.get("m.in_reply_to", {}) or {}
+        if not isinstance(in_reply_to, dict):
+            return None
+
+        return in_reply_to.get("event_id")
+
+    def _parse_reminder_command_args_for_cron(
+        self, allow_empty_text: bool = False
+    ) -> Tuple[str, str]:
         """Processes the list of arguments when a cron tab is present
 
         Returns:
@@ -128,13 +150,17 @@ class Command(object):
 
         # Split into cron tab and reminder text
         try:
-            cron_tab, reminder_text = args_str.split(";", maxsplit=1)
-        except ValueError:
-            raise CommandSyntaxError()
+            cron_tab, reminder_text = self._split_command_args(
+                args_str, allow_empty_text=allow_empty_text
+            )
+        except ValueError as exc:
+            raise CommandSyntaxError() from exc
 
-        return cron_tab, reminder_text.strip()
+        return cron_tab.strip(), reminder_text.strip()
 
-    def _parse_reminder_command_args(self) -> Tuple[datetime, str, Optional[timedelta]]:
+    def _parse_reminder_command_args(
+        self, allow_empty_text: bool = False
+    ) -> Tuple[datetime, str, Optional[timedelta]]:
         """Processes the list of arguments and returns parsed reminder information
 
         Returns:
@@ -149,9 +175,11 @@ class Command(object):
         logger.debug("Parsing command arguments: %s", args_str)
 
         try:
-            time_str, reminder_text = args_str.split(";", maxsplit=1)
-        except ValueError:
-            raise CommandSyntaxError()
+            time_str, reminder_text = self._split_command_args(
+                args_str, allow_empty_text=allow_empty_text
+            )
+        except ValueError as exc:
+            raise CommandSyntaxError() from exc
         logger.debug("Got time: %s", time_str)
 
         # Clean up the input
@@ -180,9 +208,11 @@ class Command(object):
 
             # Extract the start time
             try:
-                time_str, reminder_text = reminder_text.split(";", maxsplit=1)
-            except ValueError:
-                raise CommandSyntaxError()
+                time_str, reminder_text = self._split_command_args(
+                    reminder_text, allow_empty_text=allow_empty_text
+                )
+            except ValueError as exc:
+                raise CommandSyntaxError() from exc
             reminder_text = reminder_text.strip()
 
             logger.debug("Start time: %s", time_str)
@@ -191,6 +221,74 @@ class Command(object):
         time = _parse_str_to_time(time_str, tz_aware=False)
 
         return time, reminder_text, recurse_timedelta
+
+    def _split_command_args(
+        self, args_str: str, allow_empty_text: bool
+    ) -> Tuple[str, str]:
+        """Split command args into the time/cron segment and reminder text."""
+        parts = args_str.split(";", maxsplit=1)
+        if len(parts) == 1:
+            if allow_empty_text:
+                return args_str, ""
+            raise CommandSyntaxError()
+
+        return parts[0], parts[1]
+
+    def _allow_missing_reminder_text(self) -> bool:
+        """Whether the current command may omit reminder text entirely."""
+        return self.replied_to_event_id is not None
+
+    def _find_reminders_by_text(self, reminder_text: str) -> List[Reminder]:
+        """Return reminders in this room whose text matches (case-insensitive)."""
+        text_key = reminder_text.upper()
+        matches: List[Reminder] = []
+        for (room_id, stored_text, _), reminder in REMINDERS.items():
+            if room_id == self.room.room_id and stored_text == text_key:
+                matches.append(reminder)
+        return matches
+
+    def _find_reminders_by_reply_event_id(
+        self, reply_event_id: str
+    ) -> List[Reminder]:
+        """Return reminders tied to the replied-to event."""
+        matches: List[Reminder] = []
+        for reminder in REMINDERS.values():
+            if (
+                reminder.room_id == self.room.room_id
+                and reminder.reply_to_event_id == reply_event_id
+            ):
+                matches.append(reminder)
+        return matches
+
+    def _find_alarms_by_text(self, reminder_text: str) -> List[Reminder]:
+        """Return active alarms for reminders with the given text."""
+        text_key = reminder_text.upper()
+        matches: List[Reminder] = []
+        for (room_id, stored_text, _), reminder in ALARMS.items():
+            if room_id == self.room.room_id and stored_text == text_key:
+                matches.append(reminder)
+        return matches
+
+    def _find_alarms_by_reply_event_id(
+        self, reply_event_id: str
+    ) -> List[Reminder]:
+        """Return active alarms tied to the replied-to event."""
+        matches: List[Reminder] = []
+        for reminder in ALARMS.values():
+            if (
+                reminder.room_id == self.room.room_id
+                and reminder.reply_to_event_id == reply_event_id
+            ):
+                matches.append(reminder)
+        return matches
+
+    def _alarms_in_room(self) -> List[Reminder]:
+        """Return all reminders with active alarms in this room."""
+        return [
+            reminder
+            for (room_id, _, _), reminder in ALARMS.items()
+            if room_id == self.room.room_id
+        ]
 
     async def _confirm_reminder(self, reminder: Reminder):
         """Sends a message to the room confirming the reminder is set
@@ -250,8 +348,11 @@ class Command(object):
         cron_tab = None
         start_time = None
         recurse_timedelta = None
+        allow_empty_text = self._allow_missing_reminder_text()
         if " ".join(self.args).lower().startswith("cron"):
-            cron_tab, reminder_text = self._parse_reminder_command_args_for_cron()
+            cron_tab, reminder_text = self._parse_reminder_command_args_for_cron(
+                allow_empty_text=allow_empty_text
+            )
 
             logger.debug(
                 "Creating reminder in room %s with cron tab %s: %s",
@@ -264,7 +365,9 @@ class Command(object):
                 start_time,
                 reminder_text,
                 recurse_timedelta,
-            ) = self._parse_reminder_command_args()
+            ) = self._parse_reminder_command_args(
+                allow_empty_text=allow_empty_text
+            )
 
             logger.debug(
                 "Creating reminder in room %s with delta %s: %s",
@@ -273,7 +376,12 @@ class Command(object):
                 reminder_text,
             )
 
-        if (self.room.room_id, reminder_text.upper()) in REMINDERS:
+        reminder_key = (
+            self.room.room_id,
+            reminder_text.upper(),
+            self.replied_to_event_id,
+        )
+        if reminder_key in REMINDERS:
             await send_text_to_room(
                 self.client,
                 self.room.room_id,
@@ -293,10 +401,11 @@ class Command(object):
             recurse_timedelta=recurse_timedelta,
             target_user=target,
             alarm=alarm,
+            reply_to_event_id=self.replied_to_event_id,
         )
 
         # Record the reminder
-        REMINDERS[(self.room.room_id, reminder_text.upper())] = reminder
+        REMINDERS[reminder_key] = reminder
         self.store.store_reminder(reminder)
 
         # Send a message to the room confirming the creation of the reminder
@@ -362,61 +471,81 @@ class Command(object):
     async def _silence(self):
         """Silences an ongoing alarm"""
 
-        # Attempt to find a reminder with an alarm currently going off
-        reminder_text = " ".join(self.args)
-        if reminder_text:
-            # Find the alarm job via its reminder text
-            alarm_job = ALARMS.get((self.room.room_id, reminder_text.upper())).alarm_job
+        reminder_text = " ".join(self.args).strip()
+        reply_event_id = self.replied_to_event_id
 
-            if alarm_job:
-                await self._remove_and_silence_alarm(alarm_job, reminder_text)
-                text = f"Alarm '{reminder_text}' silenced."
-            else:
-                # We didn't find an alarm with that reminder text
-                #
-                # Be helpful and check if this is a known reminder without an alarm
-                # currently going off
-                reminder = REMINDERS.get((self.room.room_id, reminder_text.upper()))
-                if reminder:
+        def _format_unknown_text() -> str:
+            return f"Unknown alarm or reminder '{reminder_text}'."
+
+        if reminder_text:
+            alarms = self._find_alarms_by_text(reminder_text)
+            if reply_event_id:
+                alarms = [
+                    alarm
+                    for alarm in alarms
+                    if alarm.reply_to_event_id == reply_event_id
+                ]
+
+            if not alarms:
+                # Be helpful and check if this text exists as a reminder
+                reminders = self._find_reminders_by_text(reminder_text)
+                if reply_event_id and reminders:
+                    reminders = [
+                        reminder
+                        for reminder in reminders
+                        if reminder.reply_to_event_id == reply_event_id
+                    ]
+
+                if reminders:
                     text = (
                         f"The reminder '{reminder_text}' does not currently have an "
                         f"alarm going off."
                     )
                 else:
-                    # Nope, can't find it
-                    text = f"Unknown alarm or reminder '{reminder_text}'."
+                    text = _format_unknown_text()
+            elif len(alarms) > 1 and not reply_event_id:
+                text = (
+                    f"Multiple alarms named '{reminder_text}' are active. Reply to "
+                    f"the original message you want to silence."
+                )
+            else:
+                reminder = alarms[0]
+                await self._remove_and_silence_alarm(reminder)
+                text = f"Alarm '{reminder_text}' silenced."
 
+        elif reply_event_id:
+            alarms = self._find_alarms_by_reply_event_id(reply_event_id)
+            if not alarms:
+                text = "No active alarm is associated with that replied-to message."
+            elif len(alarms) > 1:
+                text = (
+                    "Multiple alarms are associated with that message. Include the "
+                    "reminder text to silence a specific one."
+                )
+            else:
+                reminder = alarms[0]
+                await self._remove_and_silence_alarm(reminder)
+                text = f"Alarm '{reminder.reminder_text}' silenced."
         else:
             # No reminder text provided. Check if there's a reminder currently firing
-            # in the room instead then
-            for alarm_info, reminder in ALARMS.items():
-                if alarm_info[0] == self.room.room_id:
-                    # Found one!
-                    reminder_text = alarm_info[
-                        1
-                    ].capitalize()  # normalize the text a bit
-
-                    await self._remove_and_silence_alarm(
-                        reminder.alarm_job, reminder_text
-                    )
-                    text = f"Alarm '{reminder_text}' silenced."
-
-                    # Prevent the `else` clause from being triggered
-                    break
+            alarms = self._alarms_in_room()
+            if alarms:
+                reminder = alarms[0]
+                await self._remove_and_silence_alarm(reminder)
+                reminder_text = reminder.reminder_text.capitalize()
+                text = f"Alarm '{reminder_text}' silenced."
             else:
-                # If we didn't find any alarms...
                 text = "No alarms are currently firing in this room."
 
         await send_text_to_room(self.client, self.room.room_id, text)
 
-    async def _remove_and_silence_alarm(self, alarm_job: Job, reminder_text: str):
-        # We found a reminder with an alarm. Remove it from the dict of current
-        # alarms
-        ALARMS.pop((self.room.room_id, reminder_text.upper()), None)
+    async def _remove_and_silence_alarm(self, reminder: Reminder):
+        # We found a reminder with an alarm. Remove it from the dict of current alarms
+        ALARMS.pop(reminder.key(), None)
 
-        if SCHEDULER.get_job(alarm_job.id):
+        if reminder.alarm_job and SCHEDULER.get_job(reminder.alarm_job.id):
             # Silence the alarm job
-            alarm_job.remove()
+            reminder.alarm_job.remove()
 
     @command_syntax("")
     async def _list_reminders(self):
@@ -537,29 +666,60 @@ class Command(object):
 
         await send_text_to_room(self.client, self.room.room_id, output)
 
-    @command_syntax("<reminder text>")
+    @command_syntax("[<reminder text>]")
     async def _delete_reminder(self):
         """Delete a reminder via its reminder text"""
-        reminder_text = " ".join(self.args)
-        if not reminder_text:
+        reminder_text = " ".join(self.args).strip()
+        reply_event_id = self.replied_to_event_id
+        if not reminder_text and not reply_event_id:
             raise CommandSyntaxError()
 
         logger.debug("Known reminders: %s", REMINDERS)
         logger.debug(
-            "Deleting reminder in room %s: %s", self.room.room_id, reminder_text
+            "Deleting reminder in room %s: %s", self.room.room_id, reminder_text or reply_event_id
         )
 
-        reminder = REMINDERS.get((self.room.room_id, reminder_text.upper()))
-        if reminder:
-            # Cancel the reminder and associated alarms
-            reminder.cancel()
+        reminders: List[Reminder] = []
+        if reminder_text:
+            reminders = self._find_reminders_by_text(reminder_text)
+            if reply_event_id:
+                reminders = [
+                    reminder
+                    for reminder in reminders
+                    if reminder.reply_to_event_id == reply_event_id
+                ]
+        elif reply_event_id:
+            reminders = self._find_reminders_by_reply_event_id(reply_event_id)
 
-            text = "Reminder"
-            if reminder.alarm:
-                text = "Alarm"
-            text += f' "*{reminder_text}*" cancelled.'
-        else:
-            text = f"Unknown reminder '{reminder_text}'."
+        if not reminders:
+            if reminder_text:
+                text = f"Unknown reminder '{reminder_text}'."
+            else:
+                text = "No reminder is associated with that replied-to message."
+            await send_text_to_room(self.client, self.room.room_id, text)
+            return
+
+        if len(reminders) > 1:
+            if reminder_text:
+                text = (
+                    f"Multiple reminders named '{reminder_text}' exist. Reply to the "
+                    f"original message and try again."
+                )
+            else:
+                text = (
+                    "Multiple reminders are associated with that message. Include the "
+                    "reminder text to delete a specific one."
+                )
+            await send_text_to_room(self.client, self.room.room_id, text)
+            return
+
+        reminder = reminders[0]
+        reminder.cancel()
+
+        text = "Reminder"
+        if reminder.alarm:
+            text = "Alarm"
+        text += f' "*{reminder_text or reminder.reminder_text}*" cancelled.'
 
         await send_text_to_room(self.client, self.room.room_id, text)
 

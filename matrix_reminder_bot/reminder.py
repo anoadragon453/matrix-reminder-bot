@@ -38,6 +38,7 @@ class Reminder(object):
             reminding
         alarm: Whether this reminder is an alarm. Alarms are reminders that fire every 5m
             after they go off normally, until they are silenced.
+        reply_to_event_id: Optional Matrix event ID this reminder should reply to.
     """
 
     def __init__(
@@ -52,6 +53,7 @@ class Reminder(object):
         cron_tab: Optional[str] = None,
         target_user: Optional[str] = None,
         alarm: bool = False,
+        reply_to_event_id: Optional[str] = None,
     ):
         self.client = client
         self.store = store
@@ -63,6 +65,7 @@ class Reminder(object):
         self.recurse_timedelta = recurse_timedelta
         self.target_user = target_user
         self.alarm = alarm
+        self.reply_to_event_id = reply_to_event_id
 
         # Schedule the reminder
 
@@ -104,7 +107,9 @@ class Reminder(object):
 
         # Build the reminder message
         target = make_pill(self.target_user) if self.has_target() else "@room"
-        message = f"{target} {self.reminder_text}"
+        message = target
+        if self.reminder_text:
+            message += f" {self.reminder_text}"
 
         # If this reminder has an alarm attached...
         if self.alarm:
@@ -115,7 +120,7 @@ class Reminder(object):
             )
 
             # Check that an alarm is not already ongoing from a previous run
-            if not (self.room_id, self.reminder_text.upper()) in ALARMS:
+            if not self.key() in ALARMS:
                 # Start alarming
                 self.alarm_job = SCHEDULER.add_job(
                     self._fire_alarm,
@@ -125,7 +130,7 @@ class Reminder(object):
                         seconds=int(timedelta_seconds(ALARM_TIMEDELTA)),
                     ),
                 )
-                ALARMS[(self.room_id, self.reminder_text.upper())] = self
+                ALARMS[self.key()] = self
 
         # Send the message to the room
         await send_text_to_room(
@@ -133,6 +138,7 @@ class Reminder(object):
             self.room_id,
             message,
             notice=False,
+            reply_to_event_id=self.reply_to_event_id,
             mentions_room=not self.has_target(),
             mentions_user_ids=[self.target_user] if self.has_target() else None,
         )
@@ -148,8 +154,11 @@ class Reminder(object):
 
         # Build the alarm message
         target = make_pill(self.target_user) if self.has_target() else "@room"
+        base_message = target
+        if self.reminder_text:
+            base_message += f" {self.reminder_text}"
         message = (
-            f"Alarm: {target} {self.reminder_text} "
+            f"Alarm: {base_message} "
             f"(Use `{CONFIG.command_prefix}silence [reminder text]` to silence)."
         )
 
@@ -174,10 +183,12 @@ class Reminder(object):
         )
 
         # Remove from the in-memory reminder and alarm dicts
-        REMINDERS.pop((self.room_id, self.reminder_text.upper()), None)
+        REMINDERS.pop(self.key(), None)
 
         # Delete the reminder from the database
-        self.store.delete_reminder(self.room_id, self.reminder_text)
+        self.store.delete_reminder(
+            self.room_id, self.reminder_text, self.reply_to_event_id
+        )
 
         # Delete any ongoing jobs
         if self.job and SCHEDULER.get_job(self.job.id):
@@ -185,7 +196,7 @@ class Reminder(object):
 
         # Cancel alarms of this reminder if required
         if cancel_alarm:
-            ALARMS.pop((self.room_id, self.reminder_text.upper()), None)
+            ALARMS.pop(self.key(), None)
 
             if self.alarm_job and SCHEDULER.get_job(self.alarm_job.id):
                 self.alarm_job.remove()
@@ -194,12 +205,17 @@ class Reminder(object):
         """Returns whether the reminder has a target user."""
         return self.target_user is not None
 
+    def key(self) -> Tuple[str, str, Optional[str]]:
+        """Return the unique key for this reminder."""
+        return (self.room_id, self.reminder_text.upper(), self.reply_to_event_id)
+
 
 # Global dictionaries
 #
-# Both feature (room_id, reminder_text) tuples as keys
+# Both feature (room_id, reminder_text, replied_to_event_id) tuples as keys
 #
 # reminder_text should be accessed and stored as uppercase in order to
 # allow for case-insensitive matching when carrying out user actions
-REMINDERS: Dict[Tuple[str, str], Reminder] = {}
-ALARMS: Dict[Tuple[str, str], Reminder] = {}
+ReminderKey = Tuple[str, str, Optional[str]]
+REMINDERS: Dict[ReminderKey, Reminder] = {}
+ALARMS: Dict[ReminderKey, Reminder] = {}

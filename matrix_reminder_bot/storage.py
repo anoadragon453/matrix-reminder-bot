@@ -1,15 +1,15 @@
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, Tuple
+from typing import Dict, Optional
 
 import pytz
 from apscheduler.util import timedelta_seconds
 from nio import AsyncClient
 
 from matrix_reminder_bot.config import CONFIG
-from matrix_reminder_bot.reminder import REMINDERS, Reminder
+from matrix_reminder_bot.reminder import REMINDERS, Reminder, ReminderKey
 
-latest_migration_version = 3
+latest_migration_version = 4
 
 logger = logging.getLogger(__name__)
 
@@ -271,11 +271,43 @@ class Storage(object):
 
             logger.info("Database migrated to v3")
 
-    def _load_reminders(self) -> Dict[Tuple[str, str], Reminder]:
+        if current_migration_version < 4:
+            logger.info("Migrating the database from v3 to v4...")
+
+            # Add replied_to_event_id for Matrix reply support
+            self._execute(
+                """
+                ALTER TABLE reminder
+                    ADD COLUMN replied_to_event_id TEXT NOT NULL DEFAULT ''
+            """
+            )
+
+            # Recreate the unique index to incorporate replied_to_event_id
+            self._execute(
+                """
+                DROP INDEX reminder_room_id_text
+            """
+            )
+            self._execute(
+                """
+                CREATE UNIQUE INDEX reminder_room_id_text
+                ON reminder(room_id, text, replied_to_event_id)
+            """
+            )
+
+            self._execute(
+                """
+                 UPDATE migration_version SET version = 4
+            """
+            )
+
+            logger.info("Database migrated to v4")
+
+    def _load_reminders(self) -> Dict[ReminderKey, Reminder]:
         """Load reminders from the database
 
         Returns:
-            A dictionary from (room_id, reminder text) to Reminder object
+            A dictionary from (room_id, reminder text, replied_to_event_id) to Reminder object
         """
         self._execute(
             """
@@ -287,7 +319,8 @@ class Storage(object):
                 cron_tab,
                 room_id,
                 target_user,
-                alarm
+                alarm,
+                replied_to_event_id
             FROM reminder
         """
         )
@@ -305,6 +338,7 @@ class Storage(object):
             room_id = row[5]
             target_user = row[6]
             alarm = row[7]
+            reply_to_event_id = row[8] or None
 
             if start_time:
                 # If this is a one-off reminder whose start time is in the past, then it will
@@ -323,11 +357,11 @@ class Storage(object):
                             start_time,
                         )
 
-                        self.delete_reminder(room_id, reminder_text)
+                        self.delete_reminder(room_id, reminder_text, reply_to_event_id)
                         continue
 
             # Create and record the reminder
-            reminders[(room_id, reminder_text.upper())] = Reminder(
+            reminders[(room_id, reminder_text.upper(), reply_to_event_id)] = Reminder(
                 client=self.client,
                 store=self,
                 reminder_text=reminder_text,
@@ -338,6 +372,7 @@ class Storage(object):
                 room_id=room_id,
                 target_user=target_user,
                 alarm=alarm,
+                reply_to_event_id=reply_to_event_id,
             )
 
         return reminders
@@ -366,9 +401,10 @@ class Storage(object):
                 cron_tab,
                 room_id,
                 target_user,
-                alarm
+                alarm,
+                replied_to_event_id
             ) VALUES (
-                ?, ?, ?, ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?, ?, ?
             )
         """,
             (
@@ -380,14 +416,20 @@ class Storage(object):
                 reminder.room_id,
                 reminder.target_user,
                 reminder.alarm,
+                reminder.reply_to_event_id or "",
             ),
         )
 
-    def delete_reminder(self, room_id: str, reminder_text: str):
-        """Delete a reminder via its reminder text and the room it was sent in"""
+    def delete_reminder(
+        self, room_id: str, reminder_text: str, replied_to_event_id: Optional[str]
+    ):
+        """Delete a reminder via its reminder text, room, and reply context"""
         self._execute(
             """
-            DELETE FROM reminder WHERE room_id = ? AND text = ?
+            DELETE FROM reminder
+                WHERE room_id = ?
+                AND text = ?
+                AND replied_to_event_id = ?
         """,
-            (room_id, reminder_text),
+            (room_id, reminder_text, replied_to_event_id or ""),
         )
