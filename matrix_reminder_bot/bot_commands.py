@@ -363,7 +363,7 @@ class Command(object):
         """Silences an ongoing alarm"""
 
         # Attempt to find a reminder with an alarm currently going off
-        reminder_text = " ".join(self.args)
+        reminder_text = " ".join(self.args).strip()
         if reminder_text:
             # Find the alarm job via its reminder text
             alarm_job = ALARMS.get((self.room.room_id, reminder_text.upper())).alarm_job
@@ -540,7 +540,7 @@ class Command(object):
     @command_syntax("<reminder text>")
     async def _delete_reminder(self):
         """Delete a reminder via its reminder text"""
-        reminder_text = " ".join(self.args)
+        reminder_text = " ".join(self.args).strip()
         if not reminder_text:
             raise CommandSyntaxError()
 
